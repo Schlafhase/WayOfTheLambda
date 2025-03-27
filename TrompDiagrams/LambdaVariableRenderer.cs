@@ -18,7 +18,7 @@ public class LambdaVariableRenderer(LambdaVariable v) : ILambdaRenderer
 		{
 			X = 1,
 			Y = y,
-			Length = currentHeight - y
+			Length = - y
 		};
 	}
 }
