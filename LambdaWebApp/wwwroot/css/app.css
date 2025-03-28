@@ -22,11 +22,21 @@
     --theme-font-size-normal: 16px;
     --theme-font-size-small: 14px;
     --theme-font-size-large: 20px;
+    
+    --theme-font-family: "Nunito Sans", sans-serif;
+    --theme-font-family-code: "JetBrains Mono", monospace;
+    
+    --editor-color-lambda: #906fff;
+    --editor-color-variable: #b4a039;
+    --editor-color-parenthesis: var(--theme-color-text);
+    
+    --top-row-height: 31px;
 }
 
 body {
     background-color: var(--theme-color-background);
-    font-family: "Nunito Sans", sans-serif;
+    color: var(--theme-color-text);
+    font-family: var(--theme-font-family);
     font-optical-sizing: auto;
     font-weight: 400;
     font-style: normal;
@@ -37,3 +47,16 @@ body {
     margin: 0;
     font-size: var(--theme-font-size-normal);
 }
+
+html, body, #app {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/*#app {*/
+/*    height: calc(100% - var(--top-row-height));*/
+/*    width: 100%;*/
+/*}*/
+

@@ -1,0 +1,38 @@
+﻿<div id="container">
+    <div id="line-numbers">
+        @for (int i = 1; i <= Text.Split('\n').Length; i++)
+        {
+            <div>@i</div>
+        }
+    </div>
+    <div @ref="_editor" id="editor"
+         tabindex="0"
+         data-idling="@(_idling ? "true" : "false")"
+         @onmousedown="onEditorClick"
+         @onkeydown="onEditorKeyDown"
+         @onkeydown:preventDefault="true">
+
+        @foreach (Token token in tokenise(_text))
+        {
+            @switch (token.Type)
+            {
+                case TokenType.Lambda:
+                    <span @onmousedown:preventDefault="true" class="lambda">@token.Value</span>
+                    break;
+                case TokenType.Parenthesis:
+                    <span @onmousedown:preventDefault="true" class="parenthesis">@token.Value</span>
+                    break;
+                case TokenType.Cursor:
+                    <span @onmousedown:preventDefault="true" id="cursor"></span>
+                    break;
+                case TokenType.Newline:
+                    <br />
+                    break;
+                case TokenType.Variable:
+                default:
+                    @token.Value
+                    break;
+            }
+        }
+    </div>
+</div>
