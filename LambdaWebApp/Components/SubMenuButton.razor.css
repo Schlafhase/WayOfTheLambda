@@ -1,0 +1,8 @@
+﻿.button {
+    padding: var(--menu-item-padding-vertical) var(--menu-item-padding-horizontal);
+    list-style: none;
+    background-color: rgba(0, 0, 0, 0);
+    cursor: default;
+    display: inline-block;
+    font-weight: 500;
+}

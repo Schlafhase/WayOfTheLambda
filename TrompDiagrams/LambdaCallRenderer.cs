@@ -5,7 +5,7 @@ namespace TrompDiagrams;
 
 public class LambdaCallRenderer(LambdaCall c) : ILambdaRenderer
 {
-	public Geometry Render(Dictionary<Guid, int> variableHeights, int currentHeight = 0)
+	public Geometry Render(Dictionary<string, int> variableHeights, int currentHeight = 0)
 	{
 		Geometry g = new();
 		Geometry function = LambdaRendererFactory

@@ -1,0 +1,26 @@
+﻿
+.category {
+    padding: var(--menu-item-padding-vertical) var(--menu-item-padding-horizontal);
+    list-style: none;
+    background-color: rgba(0, 0, 0, 0);
+    cursor: default;
+    display: inline-block;
+    font-weight: 500;
+}
+
+.category:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.category:hover .submenu {
+    display: block;
+}
+
+.submenu {
+    display: none;
+    position: absolute;
+    background-color: var(--theme-color-grey);
+    padding: var(--menu-item-padding-vertical) var(--menu-item-padding-horizontal);
+    z-index: 1;
+    transform: translateX(calc(0px - var(--menu-item-padding-horizontal))) translateY(var(--menu-item-padding-vertical));
+}

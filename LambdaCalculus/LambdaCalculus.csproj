@@ -6,12 +6,4 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\LambdaCalculus\LambdaCalculus.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="SkiaSharp" Version="3.118.0-preview.2.3" />
-    </ItemGroup>
-
 </Project>

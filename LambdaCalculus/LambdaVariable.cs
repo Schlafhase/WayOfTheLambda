@@ -2,10 +2,8 @@
 
 public class LambdaVariable : LambdaExpression
 {
-	public string Name { get; set; }
-	public Guid Id { get; set; } = Guid.NewGuid();
-	public LambdaDefinition? CapturingLambda { get; set; }
-	
+	public string Name { get; init; }
+
 	public override string ToString()
 	{
 		return Name;
@@ -13,23 +11,53 @@ public class LambdaVariable : LambdaExpression
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
-		if (expression is LambdaDefinition lambdaDefinition)
-		{
-			expression = new LambdaDefinition
-			{
-				CapturedVariable = lambdaDefinition.CapturedVariable,
-				Body = lambdaDefinition.Body
-			};
-		}
 		return this == variable ? expression : this;
 	}
+
+	public override LambdaExpression AlphaConvert()
+	{
+		return this;
+	}
+
+	public override LambdaExpression BetaReduce()
+	{
+		return this;
+	}
 	
+	public override bool VariableIsFree(string name)
+	{
+		return true;
+	}
+
+	public LambdaDefinition? CapturingLambda
+	{
+		get
+		{
+			LambdaExpression? current = Parent;
+			
+			while (current is not null)
+			{
+				if (current is LambdaDefinition lambdaDefinition)
+				{
+					if (lambdaDefinition.CapturedVariable.Name == Name)
+					{
+						return lambdaDefinition;
+					}
+				}
+
+				current = current.Parent;
+			}
+			return null;
+		}
+	}
+
 	public override bool Equals(LambdaExpression? other)
 	{
 		if (other is LambdaVariable variable)
 		{
-			return Id == variable.Id;
+			return Name == variable.Name && ReferenceEquals(CapturingLambda, variable.CapturingLambda);
 		}
+
 		return false;
 	}
 }

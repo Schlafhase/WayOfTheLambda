@@ -5,11 +5,14 @@ namespace TrompDiagrams;
 
 public class LambdaDefinitionRenderer(LambdaDefinition d) : ILambdaRenderer
 {
-	public Geometry Render(Dictionary<Guid, int> variableHeights, int currentHeight = 0)
+	public Geometry Render(Dictionary<string, int> variableHeights, int currentHeight = 0)
 	{
 		Geometry g = new();
-		variableHeights[d.CapturedVariable.Id] = currentHeight;
-		Geometry body = LambdaRendererFactory.CreateLambdaRenderer(d.Body).Render(variableHeights, currentHeight + 2);
+		
+		Dictionary<string, int> newHeights = variableHeights.ToDictionary();
+		newHeights[d.CapturedVariable.Name] = currentHeight;
+		
+		Geometry body = LambdaRendererFactory.CreateLambdaRenderer(d.Body).Render(newHeights, currentHeight + 2);
 		
 		(int Width, int Height) bodyDimensions = body.GetDimensions();
 

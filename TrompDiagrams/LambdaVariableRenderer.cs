@@ -5,11 +5,11 @@ namespace TrompDiagrams;
 
 public class LambdaVariableRenderer(LambdaVariable v) : ILambdaRenderer
 {
-	public Geometry Render(Dictionary<Guid, int> variableHeights, int currentHeight = 0)
+	public Geometry Render(Dictionary<string, int> variableHeights, int currentHeight = 0)
 	{
-		int y = 0;
+		int y = -currentHeight - 1;
 		
-		if (variableHeights.TryGetValue(v.Id, out int height))
+		if (variableHeights.TryGetValue(v.Name, out int height))
 		{
 			y = -(currentHeight - height);
 		}

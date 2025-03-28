@@ -1,0 +1,39 @@
+:root {
+    --theme-color: #2c356c;
+    --theme-color-light: #3b4481;
+    --theme-color-dark: #252d62;
+    --theme-color-darkest: #232752;
+    
+    --theme-color-grey: #272e3d;
+    --theme-color-grey-light: #3c435b;
+    --theme-color-grey-dark: #1e2231;
+    
+    --theme-color-accent: #d9c338;
+    
+    --theme-color-text: #c4c4c4;
+    --theme-color-text-light: #ffffff;
+    --theme-color-text-dark: #a2a2a2;
+    
+    --theme-color-background: #1a1a2f;
+
+    --menu-item-padding-vertical: 5px;
+    --menu-item-padding-horizontal: 10px;
+    
+    --theme-font-size-normal: 16px;
+    --theme-font-size-small: 14px;
+    --theme-font-size-large: 20px;
+}
+
+body {
+    background-color: var(--theme-color-background);
+    font-family: "Nunito Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings:
+            "wdth" 100,
+            "YTLC" 500;
+    
+    margin: 0;
+    font-size: var(--theme-font-size-normal);
+}

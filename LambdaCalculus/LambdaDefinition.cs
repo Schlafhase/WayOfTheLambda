@@ -1,11 +1,11 @@
-﻿namespace LambdaCalculus;
+﻿using System.Diagnostics;
+
+namespace LambdaCalculus;
 
 public class LambdaDefinition : LambdaExpression
 {
 	private LambdaVariable _capturedVariable;
-	private readonly LambdaExpression _body;
-	
-	private readonly Guid _id = Guid.NewGuid();
+	private LambdaExpression _body;
 
 	public LambdaVariable CapturedVariable
 	{
@@ -13,7 +13,7 @@ public class LambdaDefinition : LambdaExpression
 		init
 		{
 			_capturedVariable = value;
-			value.CapturingLambda = this;
+			_capturedVariable.Parent = this;
 		}
 	}
 
@@ -23,32 +23,7 @@ public class LambdaDefinition : LambdaExpression
 		init
 		{
 			_body = value;
-			setCapturingLambdaRecursive(this, value);
-		}
-	}
-
-	private static void setCapturingLambdaRecursive(LambdaDefinition parentLambda, LambdaExpression body)
-	{
-		while (true)
-		{
-			switch (body)
-			{
-				case LambdaVariable variable when variable.Name == parentLambda.CapturedVariable.Name:
-					variable.CapturingLambda = parentLambda;
-					variable.Id = parentLambda.CapturedVariable.Id;
-					break;
-				case LambdaDefinition definition when definition.CapturedVariable.Name == parentLambda.CapturedVariable.Name:
-					throw new ArgumentException("Conflicting variable name " + parentLambda.CapturedVariable.Name);
-				case LambdaDefinition definition:
-					body = definition.Body;
-					continue;
-				case LambdaCall call:
-					setCapturingLambdaRecursive(parentLambda, call.Function);
-					body = call.Argument;
-					continue;
-			}
-
-			break;
+			_body.Parent = this;
 		}
 	}
 
@@ -71,12 +46,36 @@ public class LambdaDefinition : LambdaExpression
 		};
 	}
 
+	public override LambdaExpression AlphaConvert()
+	{
+		// string newName = Guid.NewGuid().ToString();
+		string newName = GetFreeVariableName(CapturedVariable.Name);
+
+		return new LambdaDefinition
+		{
+			CapturedVariable = new LambdaVariable { Name = newName },
+			Body = Body.Substitute(CapturedVariable, new LambdaVariable { Name = newName }).AlphaConvert()
+		};
+	}
+
+	public override LambdaExpression BetaReduce()
+	{
+		return new LambdaDefinition
+		{
+			CapturedVariable = CapturedVariable,
+			Body = Body.BetaReduce()
+		};
+	}
+
+	public override bool VariableIsFree(string name)
+	{
+		return CapturedVariable.Name != name && Body.VariableIsFree(name);
+	}
+	
 	public override bool Equals(LambdaExpression? other)
 	{
 		return other is LambdaDefinition definition &&
-			_id == definition._id;
-		// return other is LambdaDefinition definition &&
-		// 	CapturedVariable.Equals(definition.CapturedVariable) &&
-		// 	Body.Equals(definition.Body);
+			CapturedVariable.Equals(definition.CapturedVariable) &&
+			Body.Equals(definition.Body);
 	}
 }

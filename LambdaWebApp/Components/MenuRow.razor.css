@@ -1,0 +1,40 @@
+﻿#row {
+    display: flex;
+    flex-direction: row;
+    
+    width: 100%;
+    /*position: fixed;*/
+    /*top: 0;*/
+    /*left: 0;*/
+    background: linear-gradient(13deg, var(--theme-color), var(--theme-color-darkest));
+    overflow-x: auto;
+    color: var(--theme-color-text);
+    
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+    
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10%;
+    color: transparent;
+    padding: 5px 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0), var(--theme-color-darkest));
+    z-index: 1;
+}
+
+#row::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+}
+
+#logo {
+    pointer-events: none;
+    height: 20px;
+    padding: 5px 10px;
+}

@@ -4,48 +4,63 @@ namespace LambdaCalculus;
 
 public class LambdaCall : LambdaExpression
 {
-	public LambdaExpression Function { get; set; }
-	public LambdaExpression Argument { get; set; }
-	
+	private LambdaExpression _function;
+	private LambdaExpression _argument;
+
+	public LambdaExpression Function
+	{
+		get => _function;
+		set
+		{
+			_function = value;
+			_function.Parent = this;
+		}
+	}
+
+	public LambdaExpression Argument
+	{
+		get => _argument;
+		set
+		{
+			_argument = value;
+			_argument.Parent = this;
+		}
+	}
+
 	public override string ToString()
 	{
-		if (needsParentheses(Function))
+		if (Function is LambdaDefinition)
 		{
+			if (Argument is LambdaDefinition or LambdaCall)
+			{
+				return "(" + Function + ") (" + Argument + ")";
+			}
 			return "(" + Function + ") " + Argument;
 		}
 
-		if (Argument is LambdaCall)
+		return Argument switch
 		{
-			return Function + " (" + Argument + ")";
-		}
-		return Function + " " + Argument;
+			LambdaDefinition => Function + " (" + Argument + ")",
+			LambdaCall       => Function + " (" + Argument + ")",
+			_                => Function + " " + Argument
+		};
 	}
 	
-	private static bool needsParentheses(LambdaExpression left)
-	{
-		if (left is not LambdaCall call)
-		{
-			return left is LambdaDefinition;
-		}
-
-		return call.Function switch
-		{
-			LambdaVariable _ => call.Argument is not LambdaVariable || needsParentheses(call.Argument),
-			LambdaCall _     => needsParentheses(call.Function) || needsParentheses(call.Argument),
-			_                => true
-		};
-	}
-
-	public LambdaExpression BetaReduce()
-	{
-		return Function switch
-		{
-			LambdaDefinition lambdaDefinition => lambdaDefinition.Body.Substitute(
-				lambdaDefinition.CapturedVariable, Argument),
-			LambdaCall call => new LambdaCall { Function = call.BetaReduce(), Argument = Argument },
-			_               => this
-		};
-	}
+	// private static bool needsParentheses(LambdaExpression left)
+	// {
+	// 	if (left is not LambdaCall call)
+	// 	{
+	// 		return left is LambdaDefinition;
+	// 	}
+	//
+	// 	return call.Function switch
+	// 	{
+	// 		LambdaVariable _ => call.Argument is not LambdaVariable || needsParentheses(call.Argument),
+	// 		LambdaCall _     => needsParentheses(call.Function) || needsParentheses(call.Argument),
+	// 		_                => true
+	// 	};
+	// }
+	
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
@@ -55,7 +70,35 @@ public class LambdaCall : LambdaExpression
 			Argument = Argument.Substitute(variable, expression)
 		};
 	}
-	
+
+	public override LambdaExpression AlphaConvert()
+	{
+		return new LambdaCall
+		{
+			Function = Function.AlphaConvert(),
+			Argument = Argument.AlphaConvert()
+		};
+	}
+
+	public override LambdaExpression BetaReduce()
+	{
+		if (Function is LambdaDefinition lambdaDefinition)
+		{
+			return lambdaDefinition.Body.Substitute(lambdaDefinition.CapturedVariable, Argument.AlphaConvert());
+		}
+
+		return new LambdaCall
+		{
+			Function = Function.BetaReduce(),
+			Argument = Argument.BetaReduce()
+		};
+	}
+
+	public override bool VariableIsFree(string name)
+	{
+		return Function.VariableIsFree(name) && Argument.VariableIsFree(name);
+	}
+
 	public override bool Equals(LambdaExpression? other)
 	{
 		return other is LambdaCall call &&
