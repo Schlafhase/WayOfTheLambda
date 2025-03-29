@@ -27,8 +27,14 @@ public partial class TextEditor : ComponentBase
 	public string Text
 	{
 		get => string.Join('\n', _lines);
-		set => _lines = value.Split('\n').ToList();
+		set
+		{
+			_lines = value.Split('\n').ToList();
+			StateHasChanged();
+		}
 	}
+
+	public event Action? TextChanged;
 
 	private int cursorColumn
 	{
@@ -239,6 +245,7 @@ public partial class TextEditor : ComponentBase
 				
 				_lines[cursorLine] = _lines[cursorLine].Remove(endOfWordBackspace, cursorColumn - endOfWordBackspace);
 				cursorColumn = endOfWordBackspace;
+				TextChanged?.Invoke();
 				return;
 			case "Backspace":
 				removeSingleCharacter();
@@ -253,6 +260,7 @@ public partial class TextEditor : ComponentBase
 				}
 				
 				_lines[cursorLine] = _lines[cursorLine].Remove(cursorColumn, endOfWordDelete - cursorColumn);
+				TextChanged?.Invoke();
 				return;
 			case "Delete":
 				removeSingleCharacter(true);
@@ -262,10 +270,12 @@ public partial class TextEditor : ComponentBase
 				_lines[cursorLine] = _lines[cursorLine].Remove(cursorColumn, _lines[cursorLine].Length - cursorColumn);
 				cursorLine++;
 				cursorColumn = 0;
+				TextChanged?.Invoke();
 				return;
 			case "Tab":
 				_lines[cursorLine] = _lines[cursorLine].Insert(cursorColumn, "    ");
 				cursorColumn += 4;
+				TextChanged?.Invoke();
 				return;
 		}
 
@@ -283,6 +293,7 @@ public partial class TextEditor : ComponentBase
 
 		_lines[cursorLine] = _lines[cursorLine].Insert(cursorColumn, character);
 		cursorColumn++;
+		TextChanged?.Invoke();
 	}
 	
 	private void moveCursorLeft()
@@ -397,6 +408,7 @@ public partial class TextEditor : ComponentBase
 				_lines[cursorLine] = _lines[cursorLine].Remove(cursorColumn, 1);
 			}
 		}
+		TextChanged?.Invoke();
 		StateHasChanged();
 	}
 

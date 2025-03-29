@@ -1,0 +1,93 @@
+﻿<div class="container" id="_@_id">
+    @ChildContent
+</div>
+
+<script>
+    function clamp(x, a, b) {
+        return Math.max(a, Math.min(x, b));
+    }
+
+    window.addSeparatorV = function (id) {
+        // console.log("Adding separator");
+        
+        const previousSeparator = document.querySelector("#_" + id + " .separator-v");
+        if (previousSeparator) {
+            previousSeparator.remove();
+        }
+        
+        const layoutItem = document.querySelector("#_" + id + " layoutitem");
+
+        const separator = document.createElement("div");
+        separator.setAttribute("draggable", "true");
+
+
+        separator.addEventListener("dragstart", (e) => {
+            e.preventDefault()
+
+            const container = layoutItem.parentElement;
+            window.onmousemove = (e) => {
+                const rect = container.getBoundingClientRect();
+                const totalHeight = rect.height;
+                const heightInPercent = (clamp(e.clientY - rect.top, 20, totalHeight-20) / totalHeight) * 100;
+                const layoutItem1 = layoutItem;
+                const layoutItem2 = separator.nextElementSibling;
+                // console.log("e.clientX: " + e.clientX + " totalWidth: " + totalHeight + " widthInPercent: " + heightInPercent);
+
+                layoutItem1.style.height = heightInPercent + "%";
+                layoutItem2.style.height = (100 - heightInPercent) + "%";
+            };
+
+            window.onmouseup = (e) => {
+                window.onmousemove = null;
+                window.onmouseup = null;
+            };
+        })
+
+        separator.classList.add("separator-v");
+        if (layoutItem) {
+            layoutItem.after(separator);
+            separator.appendChild(document.createElement("div"));
+        }
+    };
+
+    window.setHeight = function (id, heightInPercent) {
+        const layoutItem1 = document.querySelector("#_" + id + " layoutitem");
+        const layoutItem2 = layoutItem1.nextElementSibling;
+        const container = layoutItem1.parentElement;
+
+        const totalHeight = container.clientHeight;
+        layoutItem1.style.height = heightInPercent + "%";
+        layoutItem2.style.height = (100 - heightInPercent) + "%";
+    };
+
+
+</script>
+
+<style>
+    .separator-v {
+        width: 100%;
+        height: 2px;
+        position: relative;
+    }
+
+    .separator-v div {
+        width: 100%;
+        height: 10px;
+        /*background-color: var(--theme-color-light);*/
+        cursor: ns-resize;
+        pointer-events: all;
+        position: absolute;
+        transform: translateY(-5px);
+        z-index: 3;
+    }
+
+    .separator-v::after {
+        /*transform: translateY(-1px);*/
+        content: "";
+        display: block;
+        width: 100%;
+        height: 2px;
+        background-color: var(--theme-color-light);
+        z-index: 2;
+    }
+</style>

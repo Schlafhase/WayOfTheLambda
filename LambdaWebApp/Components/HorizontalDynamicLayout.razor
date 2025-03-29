@@ -1,0 +1,97 @@
+﻿<div class="container" id="_@_id">
+    @ChildContent
+</div>
+
+<script>
+    const dragX = {};
+
+    function clamp(x, a, b) {
+        return Math.max(a, Math.min(x, b));
+    }
+
+    window.addSeparator = function (id) {
+        console.log("Adding separator");
+        
+        const previousSeparator = document.querySelector("#_" + id + " .separator");
+        if (previousSeparator) {
+            previousSeparator.ondragstart = null;
+            previousSeparator.onmousemove = null;
+            previousSeparator.onmouseup = null;
+            previousSeparator.remove();
+        }
+        
+        const layoutItem = document.querySelector("#_" + id + " layoutitem");
+
+        const separator = document.createElement("div");
+        separator.setAttribute("draggable", "true");
+
+        separator.addEventListener("dragstart", (e) => {
+            e.preventDefault()
+
+            const container = layoutItem.parentElement;
+            window.onmousemove = (e) => {
+                const rect = container.getBoundingClientRect();
+                const totalWidth = rect.width;
+                const widthInPercent = (clamp(e.clientX - rect.left, 20, totalWidth-20) / totalWidth) * 100;
+                const layoutItem1 = layoutItem;
+                const layoutItem2 = separator.nextElementSibling;
+                // console.log("e.clientX: " + e.clientX + " totalWidth: " + totalWidth + " widthInPercent: " + widthInPercent);
+
+                layoutItem1.style.width = widthInPercent + "%";
+                layoutItem2.style.width = (100 - widthInPercent) + "%";
+            };
+
+            window.onmouseup = (e) => {
+                window.onmousemove = null;
+                window.onmouseup = null;
+            };
+        })
+
+        separator.classList.add("separator");
+        if (layoutItem) {
+            layoutItem.after(separator);
+            separator.appendChild(document.createElement("div"));
+        }
+    };
+
+    window.setWidth = function (id, widthInPercent) {
+        const layoutItem1 = document.querySelector("#_" + id + " layoutitem");
+        const layoutItem2 = layoutItem1.nextElementSibling;
+        const container = layoutItem1.parentElement;
+
+        const totalWidth = container.clientWidth;
+        layoutItem1.style.width = widthInPercent + "%";
+        layoutItem2.style.width = (100 - widthInPercent) + "%";
+    };
+
+
+</script>
+
+<style>
+    .separator {
+        height: 100%;
+        width: 2px;
+        position: relative;
+    }
+    
+    .separator div {
+        position: absolute;
+        width: 10px;
+        height: 100%;
+        /*background-color: var(--theme-color-light);*/
+        cursor: ew-resize;
+        pointer-events: all;
+        transform: translateX(-5px);
+        z-index: 3;
+    }
+
+    .separator::after {
+        /*transform: translateX(-1px);*/
+        content: "";
+        display: block;
+        width: 2px;
+        height: 100%;
+        background-color: var(--theme-color-light);
+        z-index: 2;
+    }
+</style>

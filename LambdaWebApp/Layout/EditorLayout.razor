@@ -1,5 +1,6 @@
 ﻿@using LambdaWebApp.Components.Menu
 @using LambdaWebApp.Components.Editor
+@using LambdaWebApp.Components
 @inherits LayoutComponentBase
 
 <MenuRow>
@@ -9,4 +10,20 @@
     <MenuCategory Name="Preferences"></MenuCategory>
 </MenuRow>
 
-<TextEditor @ref="_textEditor" ></TextEditor>
+<div id="content">
+    <HorizontalDynamicLayout>
+        <LayoutItem>
+            <TextEditor @ref="_textEditor"></TextEditor>
+        </LayoutItem>
+        <LayoutItem>
+            <VerticalDynamicLayout>
+                <LayoutItem>
+                    <TextEditor @ref="_errorMessages"></TextEditor>
+                </LayoutItem>
+                <LayoutItem>
+                    <DiagramView @ref="_diagramView"></DiagramView>
+                </LayoutItem>
+            </VerticalDynamicLayout>
+        </LayoutItem>
+    </HorizontalDynamicLayout>
+</div>

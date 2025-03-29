@@ -193,11 +193,16 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 			}
 		};
 
-	public static LambdaExpression Parse(string input)
+	public static LambdaExpression Parse(string input, int index = 0)
 	{
 		while (true)
 		{
 			input = input.Trim();
+			
+			if (string.IsNullOrWhiteSpace(input))
+			{
+				throw new InvalidTermException("Invalid lambda expression: empty string.", index);
+			}
 
 			bool startsWithParenthesis = input.StartsWith('(');
 			bool endsWithParenthesis = input.EndsWith(')');
@@ -217,7 +222,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 			if (startsWithParenthesis)
 			{
 				int parenthesesDepth = 1;
-				
+
 				for (int i = 1; i < input.Length; i++)
 				{
 					char c = input[i];
@@ -236,15 +241,20 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 					{
 						if (i == input.Length - 1)
 						{
-							return Parse(input[1..^1]);
+							return Parse(input[1..^1], index + 1);
 						}
 						break;
 					}
 
 					if (parenthesesDepth < 0)
 					{
-						throw new FormatException("Mismatched parentheses.");
+						throw new InvalidTermException("Mismatched parenthesis", index + i);
 					}
+				}
+				
+				if (parenthesesDepth != 0)
+				{
+					throw new InvalidTermException("Mismatched parenthesis", index);
 				}
 			}
 
@@ -258,24 +268,29 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 
 				if (dotIndex == -1)
 				{
-					throw new FormatException("Invalid lambda expression: missing dot after variable.");
+					throw new InvalidTermException("Invalid lambda expression: missing dot after variable.", index);
 				}
 
 				string variable = input[1..dotIndex].Trim();
 
 				if (variable.Length == 0)
 				{
-					throw new FormatException("Invalid lambda expression: missing variable.");
+					throw new InvalidTermException("Invalid lambda expression: missing variable.", index);
 				}
 
 				if (!_variableRegex.IsMatch(variable))
 				{
-					throw new FormatException("Invalid lambda expression: variable contains invalid characters. Allowed characters are a-z, A-Z, 0-9, _, and -.");
+					throw new InvalidTermException("Invalid lambda expression: variable contains invalid characters. Allowed characters are a-z, A-Z, 0-9, _, and -.", index + 1);
 				}
 
 				string body = input[(dotIndex + 1)..];
 
-				return new LambdaDefinition { CapturedVariable = new LambdaVariable { Name = variable }, Body = Parse(body) };
+				if (string.IsNullOrWhiteSpace(body))
+				{
+					throw new InvalidTermException("Invalid lambda expression: missing body.", index + dotIndex + 1);
+				}
+
+				return new LambdaDefinition { CapturedVariable = new LambdaVariable { Name = variable }, Body = Parse(body, index + dotIndex + 1) };
 			}
 
 			#endregion
@@ -284,9 +299,33 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 
 			int argumentEndIndex = input.Length;
 			int argumentStartIndex = 0;
-			int depth = 0;
 			bool argumentInParentheses = false;
 
+			int depth = 0;
+			// Try to find lambda expression outside parentheses.
+			for (int i = 0; i < input.Length; i++)
+			{
+				char c = input[i];
+					
+				switch (c)
+				{
+					case '(':
+						depth++;
+						break;
+					case ')':
+						depth--;
+						break;
+				}
+					
+				if (depth == 0 && c is '\\' or 'λ')
+				{
+					argumentStartIndex = i;
+					goto argumentFound;
+				}
+			}
+
+			depth = 0;
+			
 			if (endsWithParenthesis)
 			{
 				argumentInParentheses = true;
@@ -315,38 +354,40 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 
 					if (depth < 0)
 					{
-						throw new FormatException("Mismatched parentheses.");
+						throw new InvalidTermException("Mismatched parentheses.", index + (input.Length - i));
 					}
 
 					if (i == 0)
 					{
-						throw new FormatException("Mismatched parentheses.");
+						throw new InvalidTermException("Mismatched parentheses.", index + input.Length);
 					}
 				}
 			}
 			else
 			{
-				for (int i = input.Length - 1; i >= 0; i--)
+				
+				for (int j = input.Length - 1; j >= 0; j--)
 				{
-					char c = input[i];
+					char c = input[j];
 
 					if (c is ' ' or ')')
 					{
-						argumentStartIndex = i + 1;
+						argumentStartIndex = j + 1;
 						break;
 					}
 					
-					if (i == 0)
+					if (j == 0)
 					{
-						throw new FormatException("Invalid lambda expression: missing space or parenthesis before argument.");
+						throw new InvalidTermException("Invalid lambda expression: missing space or parenthesis before application argument.", index);
 					}
 				}
 			}
-
+			
+			argumentFound:
 			string argument = input[argumentStartIndex..argumentEndIndex];
 			string function = input[0..(argumentStartIndex - (argumentInParentheses ? 1 : 0))];
 
-			return new LambdaCall { Function = Parse(function), Argument = Parse(argument) };
+			return new LambdaCall { Function = Parse(function, index), Argument = Parse(argument, index + argumentStartIndex) };
 
 			#endregion
 		}

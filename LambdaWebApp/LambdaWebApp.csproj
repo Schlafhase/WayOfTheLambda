@@ -63,4 +63,9 @@
       <_ContentIncludedByDefault Remove="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js.map" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LambdaCalculus\LambdaCalculus.csproj" />
+      <ProjectReference Include="..\TrompDiagrams\TrompDiagrams.csproj" />
+    </ItemGroup>
+
 </Project>

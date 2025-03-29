@@ -82,16 +82,18 @@ public class LambdaCall : LambdaExpression
 
 	public override LambdaExpression BetaReduce()
 	{
-		if (Function is LambdaDefinition lambdaDefinition)
+		if (Function is not LambdaDefinition lambdaDefinition)
 		{
-			return lambdaDefinition.Body.Substitute(lambdaDefinition.CapturedVariable, Argument.AlphaConvert());
+			return new LambdaCall
+			{
+				Function = Function.BetaReduce(),
+				Argument = Argument.BetaReduce()
+			};
 		}
 
-		return new LambdaCall
-		{
-			Function = Function.BetaReduce(),
-			Argument = Argument.BetaReduce()
-		};
+		LambdaDefinition? newDefinition = (lambdaDefinition.AlphaConvert() as LambdaDefinition);
+		return newDefinition.Body.Substitute(newDefinition.CapturedVariable, Argument.AlphaConvert());
+
 	}
 
 	public override bool VariableIsFree(string name)

@@ -1,0 +1,12 @@
+﻿#content {
+    width: 100%;
+    height: calc(100% - var(--top-row-height));
+    display: flex;
+    flex-direction: row;
+}
+
+#text-editor {
+    height: 100%;
+    width: 50%;
+    border-right: 2px solid var(--theme-color-light);
+}
