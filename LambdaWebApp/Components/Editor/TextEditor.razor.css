@@ -1,11 +1,10 @@
 ﻿#line-numbers {
-    font-family: var(--theme-font-family-code);
+    font-family: var(--editor-font-family);
     color: var(--theme-color-text);
     width: fit-content;
     height: fit-content;
     min-height: calc(100% - 2px);
     padding: 2px 20px 0 20px;
-    border-right: 1px solid var(--theme-color-dark);
 }
 
 #editor {
@@ -14,12 +13,14 @@
     width: 100%;
     height: fit-content;
     min-height: calc(100% - 2px);
-    font-family: var(--theme-font-family-code);
+    font-family: var(--editor-font-family);
     overflow-x: auto;
     color: var(--editor-color-variable);
     text-wrap: nowrap;
     white-space: pre;
     cursor: text;
+
+    border-left: 1px solid var(--theme-color-dark);
 }
 
 #editor:focus {
@@ -33,9 +34,12 @@
     height: calc(100% - var(--top-row-height));
     overflow-y: auto;
     pointer-events: all;
-    line-height: 1.4em;
+    line-height: var(--editor-line-height);
     user-select: none;
     -webkit-user-select: none;
+    
+    scrollbar-color: var(--theme-color-light) transparent;
+    scrollbar-width: var(--editor-scrollbar-width);
 }
 
 .lambda {
@@ -47,7 +51,6 @@
     color: var(--editor-color-parenthesis);
 }
 
-/* TODO: make it move when scrolling */
 #cursor::after {
     display: none;
     position: absolute;
@@ -62,6 +65,9 @@
 #editor:focus[data-idling='true'] #cursor::after {
     animation: blink 1s infinite;
 }
+#editor:focus[data-idling='false'] #cursor::after {
+    animation-play-state: paused;
+}
 
 @keyframes blink {
     0%, 50% {
@@ -74,4 +80,10 @@
 
 #editor:focus #cursor::after {
     display: inline-block;
+}
+
+.placeholder {
+    height: calc(var(--editor-line-height) * 5);
+    pointer-events: none;
+    z-index: -1;
 }

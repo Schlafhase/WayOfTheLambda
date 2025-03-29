@@ -9,9 +9,12 @@ public partial class TextEditor : ComponentBase
 
 	private ElementReference _editor;
 
-	private string _text = "";
-	private int _cursorPosition = 0;
+	private List<string> _lines = [""];
+	private int _cursorLine = 0;
 	private int _cursorColumn = 0;
+	private int _previousCursorColumn = 0; // Keep the cursor in the same column when moving up or down
+	// TODO: indentation preservation
+	
 	private bool _idling = false;
 	private Timer _idleTimer;
 	private DateTime _lastInput = DateTime.MinValue;
@@ -21,42 +24,32 @@ public partial class TextEditor : ComponentBase
 
 	public string Text
 	{
-		get => _text;
-		set
-		{
-			_text = value;
-			_lastInput = DateTime.Now;
-			_cursorColumn = getCursorColumn();
-			StateHasChanged();
-		}
+		get => string.Join('\n', _lines);
+		set => _lines = value.Split('\n').ToList();
 	}
 
-	private int CursorPosition
+	private int cursorColumn
 	{
-		get => _cursorPosition;
+		get => _cursorColumn;
 		set
 		{
-			_cursorPosition = value;
-			_lastInput = DateTime.Now;
-			StateHasChanged();
+			_cursorColumn = value;
+			_previousCursorColumn = _cursorColumn;
 		}
 	}
-
-	private DateTime LastInput
+	
+	private void stopIdling()
 	{
-		get => _lastInput;
-		set
-		{
-			_lastInput = value; 
-			_idling = false;
-		}
+		_lastInput = DateTime.Now;
+		_idling = false;
+		StateHasChanged();
 	}
 
 	public TextEditor()
 	{
 		_idleTimer = new Timer(_ =>
 		{
-			if (_idling || _lastInput.AddSeconds(1) >= DateTime.Now)
+			if (_idling || _lastInput.AddMilliseconds(500) >= DateTime.Now)
 			{
 				return;
 			}
@@ -65,21 +58,75 @@ public partial class TextEditor : ComponentBase
 			StateHasChanged();
 		}, null, 0, 10);
 	}
-	
-	private List<Token> tokenise(string text)
+
+	private List<Token> tokenise()
 	{
-		if (CursorPosition > text.Length)
+		string currentLine = _lines[_cursorLine];
+
+		if (cursorColumn > currentLine.Length)
 		{
-			CursorPosition = text.Length;
+			cursorColumn = currentLine.Length;
 		}
 
 		List<Token> tokens = [];
 
-		for (int i = 0; i < text.Length; i++)
+		for (int lineIndex = 0; lineIndex < _lines.Count; lineIndex++)
 		{
-			char c = text[i];
+			string line = _lines[lineIndex];
 
-			if (i == CursorPosition)
+			for (int columnIndex = 0; columnIndex < line.Length; columnIndex++)
+			{
+				char c = line[columnIndex];
+
+				if (columnIndex == cursorColumn && lineIndex == _cursorLine)
+				{
+					tokens.Add(new Token
+					{
+						Value = "",
+						Type = TokenType.Cursor
+					});
+				}
+
+				switch (c)
+				{
+					case '\\' or 'λ' or '.':
+						tokens.Add(new Token
+						{
+							Value = c is '\\' ? "λ" : c.ToString(),
+							Type = TokenType.Lambda
+						});
+						continue;
+					case '(' or ')':
+						tokens.Add(new Token
+						{
+							Value = c.ToString(),
+							Type = TokenType.Parenthesis
+						});
+						continue;
+					default:
+						switch (tokens.Count)
+						{
+							case > 0 when tokens[^1].Type == TokenType.Variable:
+								tokens[^1] = new Token
+								{
+									Value = tokens[^1].Value + c,
+									Type = TokenType.Variable
+								};
+								break;
+							default:
+								tokens.Add(new Token
+								{
+									Value = c.ToString(),
+									Type = TokenType.Variable
+								});
+								break;
+						}
+
+						break;
+				}
+			}
+
+			if (cursorColumn == line.Length && lineIndex == _cursorLine)
 			{
 				tokens.Add(new Token
 				{
@@ -87,61 +134,17 @@ public partial class TextEditor : ComponentBase
 					Type = TokenType.Cursor
 				});
 			}
-
-			switch (c)
+			
+			if (lineIndex + 1 < _lines.Count)
 			{
-				case '\\' or 'λ' or '.':
-					tokens.Add(new Token
-					{
-						Value = c is '\\' ? "λ" : c.ToString(),
-						Type = TokenType.Lambda
-					});
-					continue;
-				case '(' or ')':
-					tokens.Add(new Token
-					{
-						Value = c.ToString(),
-						Type = TokenType.Parenthesis
-					});
-					continue;
-				case '\n':
-					tokens.Add(new Token
-					{
-						Value = "",
-						Type = TokenType.Newline
-					});
-					continue;
-				default:
-					switch (tokens.Count)
-					{
-						case > 0 when tokens[^1].Type == TokenType.Variable:
-							tokens[^1] = new Token
-							{
-								Value = tokens[^1].Value + c,
-								Type = TokenType.Variable
-							};
-							break;
-						default:
-							tokens.Add(new Token
-							{
-								Value = c.ToString(),
-								Type = TokenType.Variable
-							});
-							break;
-					}
-
-					break;
+				tokens.Add(new Token
+				{
+					Value = "",
+					Type = TokenType.Newline
+				});
 			}
 		}
 
-		if (CursorPosition == text.Length)
-		{
-			tokens.Add(new Token
-			{
-				Value = "",
-				Type = TokenType.Cursor
-			});
-		}
 
 
 		return tokens;
@@ -153,23 +156,17 @@ public partial class TextEditor : ComponentBase
 	{
 		int x = (int)Math.Round(e.OffsetX / characterWidth);
 		int y = (int)(e.OffsetY / characterHeight);
-		
-		string[] lines = Text.Split('\n');
-		
-		int line = Math.Clamp(y, 0, lines.Length - 1);
-		int column = Math.Clamp(x, 0, lines[line].Length);
-		
-		int cursor = 0;
-		for (int i = 0; i < line; i++)
-		{
-			cursor += lines[i].Length + 1;
-		}
-		
-		CursorPosition = cursor + column;
+
+		_cursorLine = Math.Clamp(y, 0, _lines.Count - 1);
+		cursorColumn = Math.Clamp(x, 0, _lines[_cursorLine].Length);
+		stopIdling();
+		StateHasChanged();
 	}
 
-	private async Task onEditorKeyDown(KeyboardEventArgs e)
+	private void onEditorKeyDown(KeyboardEventArgs e)
 	{
+		stopIdling();
+		
 		bool ctrl = e.CtrlKey;
 
 		if (e.AltKey)
@@ -179,52 +176,78 @@ public partial class TextEditor : ComponentBase
 
 		switch (e.Key)
 		{
+			case "ArrowLeft" when ctrl:
+				int endOfWordLeft = findEndOfWord(out int lineOffsetLeft);
+				
+				if (lineOffsetLeft == -1)
+				{
+					moveCursorLeft();
+					return;
+				}
+				
+				cursorColumn = endOfWordLeft;
+				return;
+			case "ArrowRight" when ctrl:
+				int endOfWordRight = findEndOfWord(out int lineOffsetRight, true);
+				
+				if (lineOffsetRight == 1)
+				{
+					moveCursorRight();
+					return;
+				}
+				
+				cursorColumn = endOfWordRight;
+				return;
 			case "ArrowLeft":
-				CursorPosition = Math.Max(0, CursorPosition - 1);
-				_cursorColumn = getCursorColumn();
+				moveCursorLeft();
 				return;
 			case "ArrowRight":
-				CursorPosition = Math.Min(Text.Length, CursorPosition + 1);
-				_cursorColumn = getCursorColumn();
+				moveCursorRight();
 				return;
 			case "ArrowUp":
-				CursorPosition = getTopIndex();
+				moveCursorUp();
 				return;
 			case "ArrowDown":
-				CursorPosition = getBottomIndex();
+				moveCursorDown();
 				return;
 			case "Backspace" when ctrl:
-				Text = controlRemove(Text, CursorPosition, out int removedBack);
-				CursorPosition -= removedBack;
+				int endOfWordBackspace = findEndOfWord(out int lineOffsetBackspace);
+
+				if (lineOffsetBackspace == -1)
+				{
+					removeSingleCharacter();
+					return;
+				}
+				
+				_lines[_cursorLine] = _lines[_cursorLine].Remove(endOfWordBackspace, cursorColumn - endOfWordBackspace);
+				cursorColumn = endOfWordBackspace;
 				return;
 			case "Backspace":
-				if (CursorPosition == 0)
-				{
-					return;
-				}
-
-				Text = Text.Remove(CursorPosition - 1, 1);
-				CursorPosition--;
+				removeSingleCharacter();
 				return;
 			case "Delete" when ctrl:
-				Text = controlRemove(Text, CursorPosition, out _, true);
-				return;
-			case "Delete":
-				if (CursorPosition == Text.Length)
+				int endOfWordDelete = findEndOfWord(out int lineOffsetDelete, true);
+				
+				if (lineOffsetDelete == 1)
 				{
+					removeSingleCharacter(true);
 					return;
 				}
-
-				Text = Text.Remove(CursorPosition, 1);
+				
+				_lines[_cursorLine] = _lines[_cursorLine].Remove(cursorColumn, endOfWordDelete - cursorColumn);
+				return;
+			case "Delete":
+				removeSingleCharacter(true);
 				return;
 			case "Enter":
-				Text = Text.Insert(CursorPosition, "\n");
-				CursorPosition++;
-				_cursorColumn = 0;
+				_lines.Insert(_cursorLine + 1, _lines[_cursorLine][cursorColumn..]);
+				_lines[_cursorLine] = _lines[_cursorLine].Remove(cursorColumn, _lines[_cursorLine].Length - cursorColumn);
+				_cursorLine++;
+				cursorColumn = 0;
 				return;
 			case "Tab":
-				Text = Text.Insert(CursorPosition, "    ");
-				CursorPosition += 4;
+				_lines[_cursorLine] = _lines[_cursorLine].Insert(cursorColumn, "    ");
+				cursorColumn += 4;
 				return;
 		}
 
@@ -240,110 +263,195 @@ public partial class TextEditor : ComponentBase
 			return;
 		}
 
-		Text = Text.Insert(CursorPosition, character);
-		CursorPosition++;
-	}
-
-	// TODO: Fix cursor moving in weird ways
-	private int getCursorColumn()
-	{
-		if (CursorPosition > Text.Length)
-		{
-			CursorPosition = Text.Length;
-		}
-		
-		for (int i = CursorPosition - 1; i >= 0; i--)
-		{
-			if (Text[i] == '\n')
-			{
-				return CursorPosition - i - 1;
-			}
-		}
-		return CursorPosition;
-	}
-
-	private int getBottomIndex()
-	{
-		string text = _text[CursorPosition..];
-		
-		if (!text.Contains('\n'))
-		{
-			CursorPosition = text.Length + CursorPosition;
-			_cursorColumn = getCursorColumn();
-			return CursorPosition;
-		}
-		
-		string[] lines = text.Split('\n');
-		string currentLine = lines[0];
-		string bottomLine = lines[1];
-		return Math.Min(bottomLine.Length, _cursorColumn) + currentLine.Length + CursorPosition + 1;
+		_lines[_cursorLine] = _lines[_cursorLine].Insert(cursorColumn, character);
+		cursorColumn++;
 	}
 	
-	private int getTopIndex()
+	private void moveCursorLeft()
 	{
-		string text = _text[..CursorPosition];
-		
-		if (!text.Contains('\n'))
+		if (cursorColumn == 0)
 		{
-			_cursorColumn = 0;
-			return 0;
+			if (_cursorLine == 0)
+			{
+				cursorColumn = 0;
+				return;
+			}
+
+			_cursorLine--;
+			cursorColumn = _lines[_cursorLine].Length;
 		}
+		else
+		{
+			cursorColumn--;
+		}
+		stopIdling();
+	}
+	
+	private void moveCursorRight()
+	{
+		if (cursorColumn == _lines[_cursorLine].Length)
+		{
+			if (_cursorLine == _lines.Count - 1)
+			{
+				cursorColumn = _lines[_cursorLine].Length;
+				return;
+			}
+
+			_cursorLine++;
+			cursorColumn = 0;
+		}
+		else
+		{
+			cursorColumn++;
+		}
+		stopIdling();
+	}
+	
+	private void moveCursorUp()
+	{
+		if (_cursorLine == 0)
+		{
+			cursorColumn = 0;
+			return;
+		}
+
+		_cursorLine--;
 		
-		string[] lines = text.Split('\n');
-		string topLine = lines[^2];
-		return CursorPosition - _cursorColumn - (topLine.Length - Math.Min(topLine.Length, _cursorColumn)) - 1;
+		// Change cursor column without changing _previousCursorColumn
+		_cursorColumn = Math.Min(_previousCursorColumn, _lines[_cursorLine].Length);
+		stopIdling();
+	}
+	
+	private void moveCursorDown()
+	{
+		if (_cursorLine == _lines.Count - 1)
+		{
+			cursorColumn = _lines[_cursorLine].Length;
+			return;
+		}
+
+		_cursorLine++;
+		
+		// Change cursor column without changing _previousCursorColumn
+		_cursorColumn = Math.Min(_previousCursorColumn, _lines[_cursorLine].Length);
+		stopIdling();
 	}
 
-	private static int controlFindIndex(string text, int index, bool forward = false)
+	private void removeSingleCharacter(bool inFront = false)
 	{
-		char c;
-
-		try
+		
+		if (!inFront)
 		{
-			c = text[index - (forward ? 0 : 1)];
-		}
-		catch (IndexOutOfRangeException)
-		{
-			return -1;
-		}
-
-		bool removeWhitespace = char.IsWhiteSpace(c);
-
-		int end = index - (forward ? 0 : 1);
-
-		if (forward)
-		{
-			while (end < text.Length && char.IsWhiteSpace(text[end]) == removeWhitespace)
+			if (cursorColumn == 0)
 			{
-				end++;
+				if (_cursorLine == 0)
+				{
+					return;
+				}
+				
+				int previousLineLength = _lines[_cursorLine].Length;
+				
+				_lines[_cursorLine - 1] += _lines[_cursorLine];
+				_lines.RemoveAt(_cursorLine);
+				_cursorLine--;
+				cursorColumn = _lines[_cursorLine].Length - previousLineLength;
+			}
+			else
+			{
+				_lines[_cursorLine] = _lines[_cursorLine].Remove(cursorColumn - 1, 1);
+				cursorColumn--;
 			}
 		}
 		else
 		{
-			while (end > 0 && char.IsWhiteSpace(text[end - 1]) == removeWhitespace)
+			if (cursorColumn == _lines[_cursorLine].Length)
 			{
-				end--;
+				if (_cursorLine == _lines.Count - 1)
+				{
+					return;
+				}
+
+				_lines[_cursorLine] += _lines[_cursorLine + 1];
+				_lines.RemoveAt(_cursorLine + 1);
+			}
+			else
+			{
+				_lines[_cursorLine] = _lines[_cursorLine].Remove(cursorColumn, 1);
+			}
+		}
+		StateHasChanged();
+	}
+
+	private int findEndOfWord(out int lineOffset, bool forward = false)
+	{
+		lineOffset = 0;
+		
+		switch (forward)
+		{
+			case true when cursorColumn == _lines[_cursorLine].Length:
+				lineOffset = _cursorLine == _lines.Count - 1 ? 0 : 1;
+				return cursorColumn;
+			case false when cursorColumn == 0:
+				lineOffset = _cursorLine == 0 ? 0 : -1;
+				return lineOffset == 0 ? 0 : _lines[_cursorLine + lineOffset].Length;
+		}
+		int i = cursorColumn - (forward ? 0 : 1);
+		
+		if (i is 0 && char.IsWhiteSpace(_lines[_cursorLine][i]) && !forward)
+		{
+			return 0;
+		}
+		
+		// Skip whitespace
+		if (!forward)
+		{
+			while (i > 0 && char.IsWhiteSpace(_lines[_cursorLine][i]))
+			{
+				i--;
+
+				if (i != 0)
+				{
+					continue;
+				}
+
+				char.IsWhiteSpace(_lines[_cursorLine][i]);
+				return 0;
 			}
 		}
 
-		return end;
+		WordType currentType = _lines[_cursorLine][i] switch
+		{
+			'λ' or '\\' or '.' => WordType.Lambda,
+			'(' or ')' => WordType.Parenthesis,
+			' ' when forward => WordType.Whitespace,
+			_ => WordType.Default
+		};
+
+		
+		for (; i >= 0 && i < _lines[_cursorLine].Length; i += forward ? 1 : -1)
+		{
+			char c = _lines[_cursorLine][i];
+			WordType type = c switch
+			{
+				'λ' or '\\' or '.' => WordType.Lambda,
+				'(' or ')' => WordType.Parenthesis,
+				' ' => WordType.Whitespace,
+				_ => WordType.Default
+			};
+
+			if (type != currentType)
+			{
+				return i + (forward ? 0 : 1);
+			}
+		}
+		return i + (forward ? 0 : 1);
 	}
 
-	private static string controlRemove(string text, int index, out int removed, bool forward = false)
+	private enum WordType
 	{
-		int end = controlFindIndex(text, index, forward);
-
-		if (end == -1)
-		{
-			removed = 0;
-			return text;
-		}
-
-		// end = forward ? end : end + 1;
-		removed = Math.Abs(end - index);
-
-		return end > index
-			? text.Remove(index, end - index)
-			: text.Remove(end, index - end);
+		Lambda,
+		Parenthesis,
+		Whitespace,
+		Default
 	}
 }

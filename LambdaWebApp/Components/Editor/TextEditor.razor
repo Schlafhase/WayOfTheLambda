@@ -12,27 +12,31 @@
          @onkeydown="onEditorKeyDown"
          @onkeydown:preventDefault="true">
 
-        @foreach (Token token in tokenise(_text))
-        {
-            @switch (token.Type)
+        <div>
+            @foreach (Token token in tokenise())
             {
-                case TokenType.Lambda:
-                    <span @onmousedown:preventDefault="true" class="lambda">@token.Value</span>
-                    break;
-                case TokenType.Parenthesis:
-                    <span @onmousedown:preventDefault="true" class="parenthesis">@token.Value</span>
-                    break;
-                case TokenType.Cursor:
-                    <span @onmousedown:preventDefault="true" id="cursor"></span>
-                    break;
-                case TokenType.Newline:
-                    <br />
-                    break;
-                case TokenType.Variable:
-                default:
-                    @token.Value
-                    break;
+                @switch (token.Type)
+                {
+                    case TokenType.Lambda:
+                        <span @onmousedown:preventDefault="true" class="lambda">@token.Value</span>
+                        break;
+                    case TokenType.Parenthesis:
+                        <span @onmousedown:preventDefault="true" class="parenthesis">@token.Value</span>
+                        break;
+                    case TokenType.Cursor:
+                        <span @onmousedown:preventDefault="true" id="cursor"></span>
+                        break;
+                    case TokenType.Newline:
+                        <br/>
+                        break;
+                    case TokenType.Variable:
+                    default:
+                        @token.Value
+                        break;
+                }
             }
-        }
+            <span class="invisible">_</span> <!-- For fit-content property -->
+        </div>
+        <div class="placeholder"></div>
     </div>
 </div>
