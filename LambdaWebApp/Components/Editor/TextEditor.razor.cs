@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace LambdaWebApp.Components.Editor;
 
 public partial class TextEditor : ComponentBase
 {
 	[Inject] private AppSettings _settings { get; set; } = null!;
+	[Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
 
 	private ElementReference _editor;
 
@@ -37,7 +39,16 @@ public partial class TextEditor : ComponentBase
 			_previousCursorColumn = _cursorColumn;
 		}
 	}
-	
+
+	private int cursorLine
+	{
+		get => _cursorLine;
+		set
+		{
+			_cursorLine = value;
+		}
+	}
+
 	private void stopIdling()
 	{
 		_lastInput = DateTime.Now;
@@ -61,7 +72,7 @@ public partial class TextEditor : ComponentBase
 
 	private List<Token> tokenise()
 	{
-		string currentLine = _lines[_cursorLine];
+		string currentLine = _lines[cursorLine];
 
 		if (cursorColumn > currentLine.Length)
 		{
@@ -78,7 +89,7 @@ public partial class TextEditor : ComponentBase
 			{
 				char c = line[columnIndex];
 
-				if (columnIndex == cursorColumn && lineIndex == _cursorLine)
+				if (columnIndex == cursorColumn && lineIndex == cursorLine)
 				{
 					tokens.Add(new Token
 					{
@@ -126,7 +137,7 @@ public partial class TextEditor : ComponentBase
 				}
 			}
 
-			if (cursorColumn == line.Length && lineIndex == _cursorLine)
+			if (cursorColumn == line.Length && lineIndex == cursorLine)
 			{
 				tokens.Add(new Token
 				{
@@ -144,8 +155,15 @@ public partial class TextEditor : ComponentBase
 				});
 			}
 		}
-
-
+		
+		try
+		{
+			_jsRuntime.InvokeVoidAsync("scrollToCursor", _cursorLine);
+		}
+		catch (InvalidOperationException)
+		{
+			// Ignore, this is most likely due to the component being disposed or not initialised yet
+		}
 
 		return tokens;
 	}
@@ -157,8 +175,8 @@ public partial class TextEditor : ComponentBase
 		int x = (int)Math.Round(e.OffsetX / characterWidth);
 		int y = (int)(e.OffsetY / characterHeight);
 
-		_cursorLine = Math.Clamp(y, 0, _lines.Count - 1);
-		cursorColumn = Math.Clamp(x, 0, _lines[_cursorLine].Length);
+		cursorLine = Math.Clamp(y, 0, _lines.Count - 1);
+		cursorColumn = Math.Clamp(x, 0, _lines[cursorLine].Length);
 		stopIdling();
 		StateHasChanged();
 	}
@@ -219,7 +237,7 @@ public partial class TextEditor : ComponentBase
 					return;
 				}
 				
-				_lines[_cursorLine] = _lines[_cursorLine].Remove(endOfWordBackspace, cursorColumn - endOfWordBackspace);
+				_lines[cursorLine] = _lines[cursorLine].Remove(endOfWordBackspace, cursorColumn - endOfWordBackspace);
 				cursorColumn = endOfWordBackspace;
 				return;
 			case "Backspace":
@@ -234,19 +252,19 @@ public partial class TextEditor : ComponentBase
 					return;
 				}
 				
-				_lines[_cursorLine] = _lines[_cursorLine].Remove(cursorColumn, endOfWordDelete - cursorColumn);
+				_lines[cursorLine] = _lines[cursorLine].Remove(cursorColumn, endOfWordDelete - cursorColumn);
 				return;
 			case "Delete":
 				removeSingleCharacter(true);
 				return;
 			case "Enter":
-				_lines.Insert(_cursorLine + 1, _lines[_cursorLine][cursorColumn..]);
-				_lines[_cursorLine] = _lines[_cursorLine].Remove(cursorColumn, _lines[_cursorLine].Length - cursorColumn);
-				_cursorLine++;
+				_lines.Insert(cursorLine + 1, _lines[cursorLine][cursorColumn..]);
+				_lines[cursorLine] = _lines[cursorLine].Remove(cursorColumn, _lines[cursorLine].Length - cursorColumn);
+				cursorLine++;
 				cursorColumn = 0;
 				return;
 			case "Tab":
-				_lines[_cursorLine] = _lines[_cursorLine].Insert(cursorColumn, "    ");
+				_lines[cursorLine] = _lines[cursorLine].Insert(cursorColumn, "    ");
 				cursorColumn += 4;
 				return;
 		}
@@ -263,7 +281,7 @@ public partial class TextEditor : ComponentBase
 			return;
 		}
 
-		_lines[_cursorLine] = _lines[_cursorLine].Insert(cursorColumn, character);
+		_lines[cursorLine] = _lines[cursorLine].Insert(cursorColumn, character);
 		cursorColumn++;
 	}
 	
@@ -271,14 +289,14 @@ public partial class TextEditor : ComponentBase
 	{
 		if (cursorColumn == 0)
 		{
-			if (_cursorLine == 0)
+			if (cursorLine == 0)
 			{
 				cursorColumn = 0;
 				return;
 			}
 
-			_cursorLine--;
-			cursorColumn = _lines[_cursorLine].Length;
+			cursorLine--;
+			cursorColumn = _lines[cursorLine].Length;
 		}
 		else
 		{
@@ -289,15 +307,15 @@ public partial class TextEditor : ComponentBase
 	
 	private void moveCursorRight()
 	{
-		if (cursorColumn == _lines[_cursorLine].Length)
+		if (cursorColumn == _lines[cursorLine].Length)
 		{
-			if (_cursorLine == _lines.Count - 1)
+			if (cursorLine == _lines.Count - 1)
 			{
-				cursorColumn = _lines[_cursorLine].Length;
+				cursorColumn = _lines[cursorLine].Length;
 				return;
 			}
 
-			_cursorLine++;
+			cursorLine++;
 			cursorColumn = 0;
 		}
 		else
@@ -309,31 +327,31 @@ public partial class TextEditor : ComponentBase
 	
 	private void moveCursorUp()
 	{
-		if (_cursorLine == 0)
+		if (cursorLine == 0)
 		{
 			cursorColumn = 0;
 			return;
 		}
 
-		_cursorLine--;
+		cursorLine--;
 		
 		// Change cursor column without changing _previousCursorColumn
-		_cursorColumn = Math.Min(_previousCursorColumn, _lines[_cursorLine].Length);
+		_cursorColumn = Math.Min(_previousCursorColumn, _lines[cursorLine].Length);
 		stopIdling();
 	}
 	
 	private void moveCursorDown()
 	{
-		if (_cursorLine == _lines.Count - 1)
+		if (cursorLine == _lines.Count - 1)
 		{
-			cursorColumn = _lines[_cursorLine].Length;
+			cursorColumn = _lines[cursorLine].Length;
 			return;
 		}
 
-		_cursorLine++;
+		cursorLine++;
 		
 		// Change cursor column without changing _previousCursorColumn
-		_cursorColumn = Math.Min(_previousCursorColumn, _lines[_cursorLine].Length);
+		_cursorColumn = Math.Min(_previousCursorColumn, _lines[cursorLine].Length);
 		stopIdling();
 	}
 
@@ -344,39 +362,39 @@ public partial class TextEditor : ComponentBase
 		{
 			if (cursorColumn == 0)
 			{
-				if (_cursorLine == 0)
+				if (cursorLine == 0)
 				{
 					return;
 				}
 				
-				int previousLineLength = _lines[_cursorLine].Length;
+				int previousLineLength = _lines[cursorLine].Length;
 				
-				_lines[_cursorLine - 1] += _lines[_cursorLine];
-				_lines.RemoveAt(_cursorLine);
-				_cursorLine--;
-				cursorColumn = _lines[_cursorLine].Length - previousLineLength;
+				_lines[cursorLine - 1] += _lines[cursorLine];
+				_lines.RemoveAt(cursorLine);
+				cursorLine--;
+				cursorColumn = _lines[cursorLine].Length - previousLineLength;
 			}
 			else
 			{
-				_lines[_cursorLine] = _lines[_cursorLine].Remove(cursorColumn - 1, 1);
+				_lines[cursorLine] = _lines[cursorLine].Remove(cursorColumn - 1, 1);
 				cursorColumn--;
 			}
 		}
 		else
 		{
-			if (cursorColumn == _lines[_cursorLine].Length)
+			if (cursorColumn == _lines[cursorLine].Length)
 			{
-				if (_cursorLine == _lines.Count - 1)
+				if (cursorLine == _lines.Count - 1)
 				{
 					return;
 				}
 
-				_lines[_cursorLine] += _lines[_cursorLine + 1];
-				_lines.RemoveAt(_cursorLine + 1);
+				_lines[cursorLine] += _lines[cursorLine + 1];
+				_lines.RemoveAt(cursorLine + 1);
 			}
 			else
 			{
-				_lines[_cursorLine] = _lines[_cursorLine].Remove(cursorColumn, 1);
+				_lines[cursorLine] = _lines[cursorLine].Remove(cursorColumn, 1);
 			}
 		}
 		StateHasChanged();
@@ -388,16 +406,16 @@ public partial class TextEditor : ComponentBase
 		
 		switch (forward)
 		{
-			case true when cursorColumn == _lines[_cursorLine].Length:
-				lineOffset = _cursorLine == _lines.Count - 1 ? 0 : 1;
+			case true when cursorColumn == _lines[cursorLine].Length:
+				lineOffset = cursorLine == _lines.Count - 1 ? 0 : 1;
 				return cursorColumn;
 			case false when cursorColumn == 0:
-				lineOffset = _cursorLine == 0 ? 0 : -1;
-				return lineOffset == 0 ? 0 : _lines[_cursorLine + lineOffset].Length;
+				lineOffset = cursorLine == 0 ? 0 : -1;
+				return lineOffset == 0 ? 0 : _lines[cursorLine + lineOffset].Length;
 		}
 		int i = cursorColumn - (forward ? 0 : 1);
 		
-		if (i is 0 && char.IsWhiteSpace(_lines[_cursorLine][i]) && !forward)
+		if (i is 0 && char.IsWhiteSpace(_lines[cursorLine][i]) && !forward)
 		{
 			return 0;
 		}
@@ -405,7 +423,7 @@ public partial class TextEditor : ComponentBase
 		// Skip whitespace
 		if (!forward)
 		{
-			while (i > 0 && char.IsWhiteSpace(_lines[_cursorLine][i]))
+			while (i > 0 && char.IsWhiteSpace(_lines[cursorLine][i]))
 			{
 				i--;
 
@@ -414,12 +432,12 @@ public partial class TextEditor : ComponentBase
 					continue;
 				}
 
-				char.IsWhiteSpace(_lines[_cursorLine][i]);
+				char.IsWhiteSpace(_lines[cursorLine][i]);
 				return 0;
 			}
 		}
 
-		WordType currentType = _lines[_cursorLine][i] switch
+		WordType currentType = _lines[cursorLine][i] switch
 		{
 			'λ' or '\\' or '.' => WordType.Lambda,
 			'(' or ')' => WordType.Parenthesis,
@@ -428,9 +446,9 @@ public partial class TextEditor : ComponentBase
 		};
 
 		
-		for (; i >= 0 && i < _lines[_cursorLine].Length; i += forward ? 1 : -1)
+		for (; i >= 0 && i < _lines[cursorLine].Length; i += forward ? 1 : -1)
 		{
-			char c = _lines[_cursorLine][i];
+			char c = _lines[cursorLine][i];
 			WordType type = c switch
 			{
 				'λ' or '\\' or '.' => WordType.Lambda,

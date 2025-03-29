@@ -40,3 +40,14 @@
         <div class="placeholder"></div>
     </div>
 </div>
+
+
+<script>
+    const container = document.getElementById("container");
+    window.scrollToCursor = function (line) {
+        // TODO: Only scroll when needed and scroll to nearest edge
+        container.scrollTop = document.defaultView.getComputedStyle(container, null).getPropertyValue("line-height").replace("px", "") * line;
+        console.log(container.scrollTop);
+    }
+
+</script>
