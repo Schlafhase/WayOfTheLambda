@@ -19,6 +19,28 @@ public class LambdaVariable : LambdaExpression
 		return this;
 	}
 
+	public override string ToBruijnIndex()
+	{
+		int index = 0;
+		LambdaExpression? current = Parent;
+		
+		while (current is not null)
+		{
+			if (current is LambdaDefinition lambdaDefinition)
+			{
+				index++;
+				if (lambdaDefinition.CapturedVariable.Name == Name)
+				{
+					return index.ToString();
+				}
+			}
+
+			current = current.Parent;
+		}
+
+		return "0";
+	}
+
 	public override LambdaExpression BetaReduce()
 	{
 		return this;

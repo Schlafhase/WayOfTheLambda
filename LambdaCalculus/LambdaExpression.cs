@@ -13,6 +13,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 	/// </summary>
 	/// <returns></returns>
 	public abstract LambdaExpression AlphaConvert();
+	public abstract string ToBruijnIndex();
 
 	/// <summary>
 	/// Substitutes all instances of a variable in an abstraction with the argument of the application.
@@ -28,7 +29,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 	public LambdaExpression BetaReduce(out bool betaNormalForm)
 	{
 		LambdaExpression result = BetaReduce();
-		betaNormalForm = Equals(result);
+		betaNormalForm = AlphaEquivalent(result);
 		return result;
 	}
 
@@ -102,6 +103,30 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 		}
 
 		return Equals((LambdaExpression)obj);
+	}
+	
+	public bool AlphaEquivalent(LambdaExpression other)
+	{
+		return ToBruijnIndex() == other.ToBruijnIndex();
+	}
+	
+	public LambdaExpression Clone()
+	{
+		return this switch
+		{
+			LambdaVariable variable => new LambdaVariable { Name = variable.Name },
+			LambdaDefinition definition => new LambdaDefinition
+			{
+				CapturedVariable = new LambdaVariable { Name = definition.CapturedVariable.Name },
+				Body = definition.Body.Clone()
+			},
+			LambdaCall call => new LambdaCall
+			{
+				Function = call.Function.Clone(),
+				Argument = call.Argument.Clone()
+			},
+			_ => throw new NotImplementedException()
+		};
 	}
 
 	public static bool operator ==(LambdaExpression? left, LambdaExpression? right)

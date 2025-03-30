@@ -80,6 +80,11 @@ public class LambdaCall : LambdaExpression
 		};
 	}
 
+	public override string ToBruijnIndex()
+	{
+		return Function.ToBruijnIndex() + " " + Argument.ToBruijnIndex();
+	}
+
 	public override LambdaExpression BetaReduce()
 	{
 		if (Function is not LambdaDefinition lambdaDefinition)

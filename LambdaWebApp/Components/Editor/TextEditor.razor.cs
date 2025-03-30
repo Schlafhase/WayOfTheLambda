@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using CurrieTechnologies.Razor.Clipboard;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
@@ -8,6 +9,7 @@ public partial class TextEditor : ComponentBase
 {
 	[Inject] private AppSettings _settings { get; set; } = null!;
 	[Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
+	[Inject] private ClipboardService _clipboard { get; set; } = null!;
 
 	private ElementReference _editor;
 
@@ -187,7 +189,7 @@ public partial class TextEditor : ComponentBase
 		StateHasChanged();
 	}
 
-	private void onEditorKeyDown(KeyboardEventArgs e)
+	private async Task onEditorKeyDown(KeyboardEventArgs e)
 	{
 		stopIdling();
 		
@@ -276,6 +278,12 @@ public partial class TextEditor : ComponentBase
 				_lines[cursorLine] = _lines[cursorLine].Insert(cursorColumn, "    ");
 				cursorColumn += 4;
 				TextChanged?.Invoke();
+				return;
+			case "v" when ctrl:
+				// TODO: Handle pasting multiple lines
+				string text = await _clipboard.ReadTextAsync();
+				_lines[cursorLine] = _lines[cursorLine].Insert(cursorColumn, text);
+				cursorColumn += text.Length;
 				return;
 		}
 

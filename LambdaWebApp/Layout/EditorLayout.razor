@@ -18,10 +18,11 @@
         <LayoutItem>
             <VerticalDynamicLayout>
                 <LayoutItem>
-                    <TextEditor @ref="_errorMessages"></TextEditor>
+                    <BetaReductionView @ref="_betaReductionView"></BetaReductionView>
                 </LayoutItem>
                 <LayoutItem>
-                    <DiagramView @ref="_diagramView"></DiagramView>
+                    <h2 id="diagram-header">Diagram</h2>
+                    <DiagramView @ref="_diagramView" CameraX="100" CameraY="100"></DiagramView>
                 </LayoutItem>
             </VerticalDynamicLayout>
         </LayoutItem>

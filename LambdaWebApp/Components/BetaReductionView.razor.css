@@ -1,0 +1,38 @@
+﻿.error {
+    color: var(--theme-color-accent);
+    width: 100%;
+}
+
+#container {
+    width: 100%;
+    height: 100% !important;
+    padding-left: 1em;
+    padding-right: 1em;
+    overflow: auto;
+    direction: rtl;
+    
+    scrollbar-color: var(--theme-color-light) transparent;
+    scrollbar-width: var(--editor-scrollbar-width);
+    scroll-margin: var(--editor-line-height);
+}
+
+#container * {
+    direction: ltr;
+}
+
+p {
+    width: 90%;
+}
+
+.beta-normal-form {
+    border-bottom: 1px solid var(--theme-color);
+}
+
+h2 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--theme-color);
+}
+
+.placeholder {
+    height: 5em;
+}

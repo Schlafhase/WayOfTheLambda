@@ -1,17 +1,18 @@
 ﻿@using SkiaSharp.Views.Blazor
 
 <SKCanvasView @ref="_canvas"
-              class="SKCanvas"
-              EnableRenderLoop="true"
+              id="@("_" + _id)"
               OnPaintSurface="onPaintSurface"
               @onmousedown="onMouseDown"
               @onmousemove="onMouseMove"
               @onmouseup="onMouseUp"
-              @onwheel="onMouseWheel"></SKCanvasView>
-              
+              @onwheel="onMouseWheel"
+></SKCanvasView>
+
 <style>
-    .SKCanvas {
-        width: 100%;
-        height: 100%;
-    }
+    @("#_" + _id + "{"
+      + $"width: {(Width is null ? "max(100%, 2000px)" : Width + "px")};"
+      + $"height: {(Height is null ? "max(100%, 2000px)" : Height + "px")};"
+      + "}"
+    )
 </style>

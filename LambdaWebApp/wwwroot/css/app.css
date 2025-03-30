@@ -48,6 +48,12 @@ body {
     
     margin: 0;
     font-size: var(--theme-font-size-normal);
+
+
+    scrollbar-color: var(--theme-color-light) transparent;
+    scrollbar-width: var(--editor-scrollbar-width);
+
+    scroll-margin: var(--editor-line-height);
 }
 
 html, body, #app {
@@ -64,4 +70,27 @@ html, body, #app {
 
 .invisible {
     opacity: 0;
+}
+
+layoutitem {
+    display: block;
+}
+
+.overscroll {
+    overscroll-behavior: contain;
+    position: relative;
+    overflow: auto;
+    scrollbar-width: none;
+    padding: 1px 0;
+    width: fit-content;
+}
+
+.overscroll::before {
+    content: "";
+    display: block;
+    position: absolute;
+    height: 101%;
+    width: 100%;
+    top: 0;
+    z-index: -1;
 }

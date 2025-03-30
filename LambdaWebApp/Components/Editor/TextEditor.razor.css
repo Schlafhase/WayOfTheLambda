@@ -37,10 +37,9 @@
     line-height: var(--editor-line-height);
     user-select: none;
     -webkit-user-select: none;
-    
+
     scrollbar-color: var(--theme-color-light) transparent;
     scrollbar-width: var(--editor-scrollbar-width);
-    
     scroll-margin: var(--editor-line-height);
 }
 

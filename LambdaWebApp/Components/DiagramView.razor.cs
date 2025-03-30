@@ -1,6 +1,7 @@
 ﻿using LambdaCalculus;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using SkiaSharp;
 using SkiaSharp.Views.Blazor;
 using TrompDiagrams;
@@ -17,50 +18,71 @@ public partial class DiagramView : ComponentBase
 		{
 			_lambdaExpression = value;
 			_geometry = LambdaExpressionRenderer.Render(value);
+
+			try
+			{
+				_canvas.Invalidate();
+			}
+			catch (NullReferenceException)
+			{
+				// Ignore
+			}
 		}
 	}
 
 	private SKCanvasView _canvas;
-	
+	private Guid _id = Guid.NewGuid();
+
+	[Parameter] public int? Width { get; set; } = null;
+	[Parameter] public int? Height { get; set; } = null;
+
 	private Geometry _geometry;
 	private SKColor _lineColor = SKColor.FromHsl(52, 68, 54);
-	
-	private double _zoom = 10;
-	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
-	
-	private int _cameraX = 100;
-	private int _cameraY = 100;
 
-	private int _localCameraX => (int)(_cameraX/_zoom);
-	private int _localCameraY => (int)(_cameraY/_zoom);
-	
-	private int getInLocalCoordinates(int x) => (int)(x/_zoom - _localCameraX);
+	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
+
+	[Parameter] public double Zoom { get; set; } = 10;
+	[Parameter] public int CameraX { get; set; } = 10;
+	[Parameter] public int CameraY { get; set; } = 10;
+
+	private int _localCameraX => (int)(CameraX / Zoom);
+	private int _localCameraY => (int)(CameraY / Zoom);
+
+	private int getInLocalCoordinates(int x) => (int)(x / Zoom - _localCameraX);
 
 	private bool _panning = false;
 	private int _panStartX = 0;
 	private int _panStartY = 0;
 	private int _panStartCameraX = 0;
 	private int _panStartCameraY = 0;
-	
+
 
 	public DiagramView()
 	{
 		LambdaExpression = LambdaExpression.Parse("λx.x");
 	}
 
+	// protected override async Task OnAfterRenderAsync(bool firstRender)
+	// {
+	// 	if (firstRender)
+	// 	{
+	// 		LambdaExpression = _lambdaExpression;
+	// 	}
+	// }
+
 	private void onPaintSurface(SKPaintSurfaceEventArgs e)
 	{
 		e.Surface.Canvas.Clear(SKColors.Transparent);
-		e.Surface.Canvas.Translate(_cameraX, _cameraY);
-		e.Surface.Canvas.Scale((float)_zoom);
-		
+		e.Surface.Canvas.Translate(CameraX, CameraY);
+		e.Surface.Canvas.Scale((float)Zoom);
+
 		foreach (Line line in _geometry.Lines)
 		{
 			int startX = 0;
 			int startY = 0;
 			int endX = 0;
 			int endY = 0;
-			
+
 			switch (line)
 			{
 				case HorizontalLine hLine:
@@ -93,7 +115,7 @@ public partial class DiagramView : ComponentBase
 					endY -= 1;
 					break;
 			}
-			
+
 			e.Surface.Canvas.DrawLine(startX, startY, endX, endY, new SKPaint
 			{
 				StrokeWidth = 2,
@@ -106,11 +128,11 @@ public partial class DiagramView : ComponentBase
 	{
 		_panStartX = (int)e.ClientX;
 		_panStartY = (int)e.ClientY;
-		_panStartCameraX = _cameraX;
-		_panStartCameraY = _cameraY;
+		_panStartCameraX = CameraX;
+		_panStartCameraY = CameraY;
 		_panning = true;
 	}
-	
+
 	private void onMouseMove(MouseEventArgs e)
 	{
 		if (!_panning)
@@ -118,14 +140,12 @@ public partial class DiagramView : ComponentBase
 			return;
 		}
 
-		_cameraX = _panStartCameraX + (int)e.ClientX - _panStartX;
-		_cameraY = _panStartCameraY + (int)e.ClientY - _panStartY;
-		
-		Console.WriteLine(_localCameraX);
-		Console.WriteLine(_localCameraY);
-		Console.WriteLine();
+		CameraX = _panStartCameraX + (int)e.ClientX - _panStartX;
+		CameraY = _panStartCameraY + (int)e.ClientY - _panStartY;
+
+		_canvas.Invalidate();
 	}
-	
+
 	private void onMouseUp(MouseEventArgs e)
 	{
 		_panning = false;
@@ -135,16 +155,18 @@ public partial class DiagramView : ComponentBase
 	{
 		double mouseX = e.OffsetX;
 		double mouseY = e.OffsetY;
-    
-		double worldX = (mouseX - _cameraX) / _zoom;
-		double worldY = (mouseY - _cameraY) / _zoom;
-    
-		_zoom -= e.DeltaY / 1000 * _zoom;
-    
-		double newScreenX = worldX * _zoom + _cameraX;
-		double newScreenY = worldY * _zoom + _cameraY;
-    
-		_cameraX += (int)(mouseX - newScreenX);
-		_cameraY += (int)(mouseY - newScreenY);
+
+		double worldX = (mouseX - CameraX) / Zoom;
+		double worldY = (mouseY - CameraY) / Zoom;
+
+		Zoom -= e.DeltaY / 1000 * Zoom;
+
+		double newScreenX = worldX * Zoom + CameraX;
+		double newScreenY = worldY * Zoom + CameraY;
+
+		CameraX += (int)(mouseX - newScreenX);
+		CameraY += (int)(mouseY - newScreenY);
+
+		_canvas.Invalidate();
 	}
 }

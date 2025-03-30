@@ -1,0 +1,15 @@
+﻿@using LambdaWebApp.Components
+<div class="expression">
+    <p>@LambdaExpression.ToString()</p>
+    <p>@LambdaExpression.ToBruijnIndex()</p>
+
+    <div class="overscroll">
+        <DiagramView @ref="_diagramView" Width="500" Height="100" Zoom="2"></DiagramView>
+    </div>
+</div>
+
+<style>
+    .expression canvas {
+        border: 1px dashed var(--theme-color);
+    }
+</style>

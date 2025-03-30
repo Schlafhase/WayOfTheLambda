@@ -1,0 +1,25 @@
+﻿<div id="container">
+    <h2>Beta reduction</h2>
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <p class="error">@ErrorMessage</p>
+    }
+    @if (_betaNormal)
+    {
+        <div>
+            <h3>Beta normal form</h3>
+            <ExpressionWithDiagram LambdaExpression="@_steps[^1]"/>
+        </div>
+    }
+
+    @for (int i = 0; i < _steps.Count; i++)
+    {
+        <div>
+            <h5>Step @(i + 1)</h5>
+            <ExpressionWithDiagram LambdaExpression="@_steps[i]"/>
+        </div>
+    }
+
+    <div class="placeholder">
+    </div>
+</div>

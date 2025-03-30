@@ -58,6 +58,11 @@ public class LambdaDefinition : LambdaExpression
 		};
 	}
 
+	public override string ToBruijnIndex()
+	{
+		return "λ." + Body.ToBruijnIndex();
+	}
+
 	public override LambdaExpression BetaReduce()
 	{
 		return new LambdaDefinition

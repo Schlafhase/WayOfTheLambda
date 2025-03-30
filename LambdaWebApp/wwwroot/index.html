@@ -32,6 +32,7 @@
         <span class="dismiss">🗙</span>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="_content/CurrieTechnologies.Razor.Clipboard/clipboard.min.js"></script>
 </body>
 
 <style>
@@ -47,6 +48,11 @@
         position: fixed;
         width: 100%;
         z-index: 1000;
+    }
+    
+    .reload {
+        color: var(--theme-color-accent);
+        cursor: default;
     }
 
     .loading-progress {
