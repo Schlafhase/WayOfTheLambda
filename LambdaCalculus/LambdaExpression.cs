@@ -2,7 +2,7 @@
 
 namespace LambdaCalculus;
 
-public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
+public abstract partial class LambdaExpression
 {
 	public LambdaExpression? Parent;
 
@@ -13,137 +13,129 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 	/// </summary>
 	/// <returns></returns>
 	public abstract LambdaExpression AlphaConvert();
+
 	public abstract string ToBruijnIndex();
 
 	/// <summary>
 	/// Substitutes all instances of a variable in an abstraction with the argument of the application.
 	/// </summary>
-	/// <returns></returns>
-	public abstract LambdaExpression BetaReduce();
+	/// <param name="checkForBetaNormalForm"></param>
+	/// <returns>A <see cref="LambdaExpression"/> if possible.</returns>
+	public abstract LambdaExpression? BetaReduce(bool checkForBetaNormalForm = true);
 
-	/// <summary>
-	/// Substitutes all instances of a variable in an abstraction with the argument of the application.
-	/// </summary>
-	/// <param name="betaNormalForm>True if the expression is in the beta normal form.</param>
-	/// <returns></returns>
-	public LambdaExpression BetaReduce(out bool betaNormalForm)
+	public bool IsBetaNormalForm()
 	{
-		LambdaExpression result = BetaReduce();
-		betaNormalForm = AlphaEquivalent(result);
-		return result;
+		return this switch
+		{
+			LambdaApplication application => application.Function is not LambdaAbstraction &&
+				application.Function.IsBetaNormalForm() && application.Argument.IsBetaNormalForm(),
+
+			LambdaAbstraction abstraction => abstraction.Body.IsBetaNormalForm(),
+			_                             => true
+		};
 	}
 
-	public LambdaExpression Root()
+	public LambdaExpression Root
 	{
-		LambdaExpression current = this;
-
-		while (current.Parent is not null)
+		get
 		{
-			current = current.Parent;
-		}
+			LambdaExpression current = this;
 
-		return current;
+			while (current.Parent is not null)
+			{
+				current = current.Parent;
+			}
+
+			return current;
+		}
 	}
 
 	public string GetFreeVariableName(string name)
 	{
-		if (Root().VariableIsFree(name))
+		// TODO: eta conversion
+		if (Root.VariableIsFree(name))
 		{
 			return name;
 		}
 
 		Match match = _numberedVariableRegex.Match(name);
+
 		if (match.Success)
 		{
 			int index = int.Parse(match.Groups[1].Value) + 1;
 			string newName = name[..match.Index] + "_";
-			
-			while (!Root().VariableIsFree(newName + index))
+
+			while (!Root.VariableIsFree(newName + index))
 			{
 				index++;
 			}
+
 			return newName + index;
 		}
 		else
 		{
 			int index = 1;
 			string newName = name + "_";
-			
-			while (!Root().VariableIsFree(newName + index))
+
+			while (!Root.VariableIsFree(newName + index))
 			{
 				index++;
 			}
+
 			return newName + index;
 		}
 	}
-	
+
 	[GeneratedRegex(@"_(\d+)$", RegexOptions.Compiled)]
 	private static partial Regex numberedVariableRegexGenerator();
+
 	private static readonly Regex _numberedVariableRegex = numberedVariableRegexGenerator();
 
 	public abstract bool VariableIsFree(string name);
 
-	public abstract bool Equals(LambdaExpression? other);
-
-	public override bool Equals(object? obj)
-	{
-		if (obj is null)
-		{
-			return false;
-		}
-
-		if (ReferenceEquals(this, obj))
-		{
-			return true;
-		}
-
-		if (obj.GetType() != GetType())
-		{
-			return false;
-		}
-
-		return Equals((LambdaExpression)obj);
-	}
-	
 	public bool AlphaEquivalent(LambdaExpression other)
 	{
 		return ToBruijnIndex() == other.ToBruijnIndex();
 	}
-	
-	public LambdaExpression Clone()
+
+	public LambdaExpression? Clone(LambdaExpression? parent = null)
 	{
-		return this switch
+		LambdaExpression? clone;
+
+		switch (this)
 		{
-			LambdaVariable variable => new LambdaVariable { Name = variable.Name },
-			LambdaDefinition definition => new LambdaDefinition
-			{
-				CapturedVariable = new LambdaVariable { Name = definition.CapturedVariable.Name },
-				Body = definition.Body.Clone()
-			},
-			LambdaCall call => new LambdaCall
-			{
-				Function = call.Function.Clone(),
-				Argument = call.Argument.Clone()
-			},
-			_ => throw new NotImplementedException()
-		};
-	}
-
-	public static bool operator ==(LambdaExpression? left, LambdaExpression? right)
-	{
-		return left?.Equals(right) ?? right is null;
-	}
-
-	public static bool operator !=(LambdaExpression? left, LambdaExpression? right)
-	{
-		return !left?.Equals(right) ?? right is not null;
+			case LambdaVariable variable:
+				clone = new LambdaVariable { Name = variable.Name, Parent = parent };
+				break;
+			case LambdaAbstraction definition:
+				clone = new LambdaAbstraction
+				{
+					Parent = parent
+				};
+				(clone as LambdaAbstraction).CapturedVariable = definition.CapturedVariable.Clone(clone) as LambdaVariable;
+				(clone as LambdaAbstraction).Body = definition.Body.Clone(clone);
+				break;
+			case LambdaApplication call:
+				clone = new LambdaApplication
+				{
+					Parent = parent
+				};
+				(clone as LambdaApplication).Function = call.Function.Clone(clone);
+				(clone as LambdaApplication).Argument = call.Argument.Clone(clone);
+				break;
+			default:
+				clone = null;
+				break;
+		}
+		
+		return clone;
 	}
 
 	public static LambdaExpression TRUE() =>
-		new LambdaDefinition
+		new LambdaAbstraction
 		{
 			CapturedVariable = new LambdaVariable { Name = "x" },
-			Body = new LambdaDefinition
+			Body = new LambdaAbstraction
 			{
 				CapturedVariable = new LambdaVariable { Name = "y" },
 				Body = new LambdaVariable { Name = "x" }
@@ -151,10 +143,10 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 		};
 
 	public static LambdaExpression FALSE() =>
-		new LambdaDefinition
+		new LambdaAbstraction
 		{
 			CapturedVariable = new LambdaVariable { Name = "x" },
-			Body = new LambdaDefinition
+			Body = new LambdaAbstraction
 			{
 				CapturedVariable = new LambdaVariable { Name = "y" },
 				Body = new LambdaVariable { Name = "y" }
@@ -162,18 +154,18 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 		};
 
 	public static LambdaExpression IF() =>
-		new LambdaDefinition
+		new LambdaAbstraction
 		{
 			CapturedVariable = new LambdaVariable { Name = "p" },
-			Body = new LambdaDefinition
+			Body = new LambdaAbstraction
 			{
 				CapturedVariable = new LambdaVariable { Name = "a" },
-				Body = new LambdaDefinition
+				Body = new LambdaAbstraction
 				{
 					CapturedVariable = new LambdaVariable { Name = "b" },
-					Body = new LambdaCall
+					Body = new LambdaApplication
 					{
-						Function = new LambdaCall
+						Function = new LambdaApplication
 						{
 							Function = new LambdaVariable { Name = "p" },
 							Argument = new LambdaVariable { Name = "a" }
@@ -185,12 +177,12 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 		};
 
 	public static LambdaExpression NOT() =>
-		new LambdaDefinition
+		new LambdaAbstraction
 		{
 			CapturedVariable = new LambdaVariable { Name = "p" },
-			Body = new LambdaCall
+			Body = new LambdaApplication
 			{
-				Function = new LambdaCall
+				Function = new LambdaApplication
 				{
 					Function = new LambdaVariable { Name = "p" },
 					Argument = FALSE()
@@ -200,15 +192,15 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 		};
 
 	public static LambdaExpression AND() =>
-		new LambdaDefinition
+		new LambdaAbstraction
 		{
 			CapturedVariable = new LambdaVariable { Name = "p" },
-			Body = new LambdaDefinition
+			Body = new LambdaAbstraction
 			{
 				CapturedVariable = new LambdaVariable { Name = "q" },
-				Body = new LambdaCall
+				Body = new LambdaApplication
 				{
-					Function = new LambdaCall
+					Function = new LambdaApplication
 					{
 						Function = new LambdaVariable { Name = "p" },
 						Argument = new LambdaVariable { Name = "q" },
@@ -223,7 +215,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 		while (true)
 		{
 			input = input.Trim();
-			
+
 			if (string.IsNullOrWhiteSpace(input))
 			{
 				throw new InvalidTermException("Invalid lambda expression: empty string.", index);
@@ -242,7 +234,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 			#endregion
 
 			#region Parenthesis
-			
+
 			// Check if outer parentheses are matched and therefore redundant.
 			if (startsWithParenthesis)
 			{
@@ -268,6 +260,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 						{
 							return Parse(input[1..^1], index + 1);
 						}
+
 						break;
 					}
 
@@ -276,7 +269,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 						throw new InvalidTermException("Mismatched parenthesis", index + i);
 					}
 				}
-				
+
 				if (parenthesesDepth != 0)
 				{
 					throw new InvalidTermException("Mismatched parenthesis", index);
@@ -305,7 +298,9 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 
 				if (!_variableRegex.IsMatch(variable))
 				{
-					throw new InvalidTermException("Invalid lambda expression: variable contains invalid characters. Allowed characters are a-z, A-Z, 0-9, _, and -.", index + 1);
+					throw new InvalidTermException(
+						"Invalid lambda expression: variable contains invalid characters. Allowed characters are a-z, A-Z, 0-9, _, and -.",
+						index + 1);
 				}
 
 				string body = input[(dotIndex + 1)..];
@@ -315,7 +310,10 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 					throw new InvalidTermException("Invalid lambda expression: missing body.", index + dotIndex + 1);
 				}
 
-				return new LambdaDefinition { CapturedVariable = new LambdaVariable { Name = variable }, Body = Parse(body, index + dotIndex + 1) };
+				return new LambdaAbstraction
+				{
+					CapturedVariable = new LambdaVariable { Name = variable }, Body = Parse(body, index + dotIndex + 1)
+				};
 			}
 
 			#endregion
@@ -327,11 +325,12 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 			bool argumentInParentheses = false;
 
 			int depth = 0;
+
 			// Try to find lambda expression outside parentheses.
 			for (int i = 0; i < input.Length; i++)
 			{
 				char c = input[i];
-					
+
 				switch (c)
 				{
 					case '(':
@@ -341,7 +340,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 						depth--;
 						break;
 				}
-					
+
 				if (depth == 0 && c is '\\' or 'λ')
 				{
 					argumentStartIndex = i;
@@ -350,7 +349,7 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 			}
 
 			depth = 0;
-			
+
 			if (endsWithParenthesis)
 			{
 				argumentInParentheses = true;
@@ -390,7 +389,6 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 			}
 			else
 			{
-				
 				for (int j = input.Length - 1; j >= 0; j--)
 				{
 					char c = input[j];
@@ -400,26 +398,29 @@ public abstract partial class LambdaExpression : IEquatable<LambdaExpression>
 						argumentStartIndex = j + 1;
 						break;
 					}
-					
+
 					if (j == 0)
 					{
-						throw new InvalidTermException("Invalid lambda expression: missing space or parenthesis before application argument.", index);
+						throw new InvalidTermException(
+							"Invalid lambda expression: missing space or parenthesis before application argument.",
+							index);
 					}
 				}
 			}
-			
+
 			argumentFound:
 			string argument = input[argumentStartIndex..argumentEndIndex];
 			string function = input[0..(argumentStartIndex - (argumentInParentheses ? 1 : 0))];
 
-			return new LambdaCall { Function = Parse(function, index), Argument = Parse(argument, index + argumentStartIndex) };
+			return new LambdaApplication
+				{ Function = Parse(function, index), Argument = Parse(argument, index + argumentStartIndex) };
 
 			#endregion
 		}
 	}
 
 	[GeneratedRegex(@"^[a-zA-Z0-9_-]+$", RegexOptions.Compiled)]
-    private static partial Regex variableRegexGenerator();
-	private static readonly Regex _variableRegex = variableRegexGenerator();
+	private static partial Regex variableRegexGenerator();
 
+	private static readonly Regex _variableRegex = variableRegexGenerator();
 }

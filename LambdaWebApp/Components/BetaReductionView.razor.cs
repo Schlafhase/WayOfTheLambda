@@ -20,13 +20,14 @@ public partial class BetaReductionView : ComponentBase
 	// 		StateHasChanged();
 	// 	}
 	// }
-	
+
 	public async Task SetLambdaExpression(LambdaExpression lambdaExpression)
 	{
 		if (lambdaExpression.AlphaEquivalent(_lambdaExpression))
 		{
 			return;
 		}
+
 		_lambdaExpression = lambdaExpression;
 		await loadSteps(_lambdaExpression);
 	}
@@ -41,11 +42,13 @@ public partial class BetaReductionView : ComponentBase
 		}
 	}
 
+	public event Action? OnChange;
+
 	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
 
 	public int MaxSteps { get; set; } = 100;
 
-	private List<LambdaExpression> _steps = [];
+	private List<LambdaExpression?> _steps = [];
 	private bool _betaNormal;
 	private string _errorMessage = "";
 
@@ -60,30 +63,26 @@ public partial class BetaReductionView : ComponentBase
 
 	private async Task loadSteps(LambdaExpression lambdaExpression)
 	{
-		LambdaExpression next = lambdaExpression.Clone();
-		_betaNormal = false;
+		LambdaExpression? next = lambdaExpression.Clone();
 		_steps = [];
 
-		while (!_betaNormal && _steps.Count < MaxSteps)
+		while (next is not null && _steps.Count < MaxSteps)
 		{
-			next = next.BetaReduce(out _betaNormal);
-			_steps.Add(next);
+			_steps.Add(next.Clone());
+			next = next.BetaReduce();
 
-			if (_steps.Count % 10 != 0)
-			{
-				continue;
-			}
-
-			await InvokeAsync(StateHasChanged);
-			await Task.Delay(100);
+			// if (_steps.Count % 10 != 0)
+			// {
+			// 	continue;
+			// }
+			//
+			// await Task.Delay(100);
+			// await InvokeAsync(StateHasChanged);
+			// OnChange?.Invoke();
 		}
 
-		if (_betaNormal && _steps.Count > 1)
-		{
-			_steps.RemoveAt(_steps.Count - 1);
-		}
+		_betaNormal = next is null;
+		OnChange?.Invoke();
 		await InvokeAsync(StateHasChanged);
 	}
-	
-	
 }

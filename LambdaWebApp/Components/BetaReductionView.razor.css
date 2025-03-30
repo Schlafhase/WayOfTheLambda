@@ -18,6 +18,8 @@
 
 #container * {
     direction: ltr;
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 p {

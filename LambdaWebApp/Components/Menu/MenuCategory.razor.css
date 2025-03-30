@@ -13,14 +13,18 @@
 }
 
 .category:hover .submenu {
-    display: block;
+    display: flex;
 }
 
 .submenu {
+    flex-direction: column;
+    min-width: 200px;
+    border: 1px solid var(--theme-color-grey);
+    border-radius: 2px;
     display: none;
     position: absolute;
-    background-color: var(--theme-color-grey);
-    padding: var(--menu-item-padding-vertical) var(--menu-item-padding-horizontal);
+    background-color: var(--theme-color-grey-dark);
+    padding: 0;
     z-index: 1;
     transform: translateX(calc(0px - var(--menu-item-padding-horizontal))) translateY(var(--menu-item-padding-vertical));
 }

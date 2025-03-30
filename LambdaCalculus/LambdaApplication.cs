@@ -2,12 +2,12 @@
 
 namespace LambdaCalculus;
 
-public class LambdaCall : LambdaExpression
+public class LambdaApplication : LambdaExpression
 {
-	private LambdaExpression _function;
-	private LambdaExpression _argument;
+	private LambdaExpression? _function;
+	private LambdaExpression? _argument;
 
-	public LambdaExpression Function
+	public LambdaExpression? Function
 	{
 		get => _function;
 		set
@@ -17,7 +17,7 @@ public class LambdaCall : LambdaExpression
 		}
 	}
 
-	public LambdaExpression Argument
+	public LambdaExpression? Argument
 	{
 		get => _argument;
 		set
@@ -29,9 +29,9 @@ public class LambdaCall : LambdaExpression
 
 	public override string ToString()
 	{
-		if (Function is LambdaDefinition)
+		if (Function is LambdaAbstraction)
 		{
-			if (Argument is LambdaDefinition or LambdaCall)
+			if (Argument is LambdaAbstraction or LambdaApplication)
 			{
 				return "(" + Function + ") (" + Argument + ")";
 			}
@@ -40,8 +40,8 @@ public class LambdaCall : LambdaExpression
 
 		return Argument switch
 		{
-			LambdaDefinition => Function + " (" + Argument + ")",
-			LambdaCall       => Function + " (" + Argument + ")",
+			LambdaAbstraction => Function + " (" + Argument + ")",
+			LambdaApplication       => Function + " (" + Argument + ")",
 			_                => Function + " " + Argument
 		};
 	}
@@ -64,7 +64,7 @@ public class LambdaCall : LambdaExpression
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
-		return new LambdaCall
+		return new LambdaApplication
 		{
 			Function = Function.Substitute(variable, expression),
 			Argument = Argument.Substitute(variable, expression)
@@ -73,7 +73,7 @@ public class LambdaCall : LambdaExpression
 
 	public override LambdaExpression AlphaConvert()
 	{
-		return new LambdaCall
+		return new LambdaApplication
 		{
 			Function = Function.AlphaConvert(),
 			Argument = Argument.AlphaConvert()
@@ -82,21 +82,27 @@ public class LambdaCall : LambdaExpression
 
 	public override string ToBruijnIndex()
 	{
-		return Function.ToBruijnIndex() + " " + Argument.ToBruijnIndex();
+		string bruijn = "(" + Function.ToBruijnIndex() + ")(" + Argument.ToBruijnIndex() + ")";
+		return bruijn;
 	}
 
-	public override LambdaExpression BetaReduce()
+	public override LambdaExpression? BetaReduce(bool checkForBetaNormalForm = true)
 	{
-		if (Function is not LambdaDefinition lambdaDefinition)
+		if (checkForBetaNormalForm && IsBetaNormalForm())
 		{
-			return new LambdaCall
+			return null;
+		}
+		
+		if (Function is not LambdaAbstraction lambdaDefinition)
+		{
+			return new LambdaApplication
 			{
-				Function = Function.BetaReduce(),
-				Argument = Argument.BetaReduce()
+				Function = Function.BetaReduce(false)!,
+				Argument = Argument.BetaReduce(false)!
 			};
 		}
 
-		LambdaDefinition? newDefinition = (lambdaDefinition.AlphaConvert() as LambdaDefinition);
+		LambdaAbstraction? newDefinition = (lambdaDefinition.AlphaConvert() as LambdaAbstraction);
 		return newDefinition.Body.Substitute(newDefinition.CapturedVariable, Argument.AlphaConvert());
 
 	}
@@ -104,12 +110,5 @@ public class LambdaCall : LambdaExpression
 	public override bool VariableIsFree(string name)
 	{
 		return Function.VariableIsFree(name) && Argument.VariableIsFree(name);
-	}
-
-	public override bool Equals(LambdaExpression? other)
-	{
-		return other is LambdaCall call &&
-			Function.Equals(call.Function) &&
-			Argument.Equals(call.Argument);
 	}
 }

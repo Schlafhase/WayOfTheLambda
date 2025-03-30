@@ -119,7 +119,9 @@ public partial class DiagramView : ComponentBase
 			e.Surface.Canvas.DrawLine(startX, startY, endX, endY, new SKPaint
 			{
 				StrokeWidth = 2,
-				Color = _lineColor
+				Color = _lineColor,
+				// Antialiasing caused unexpected artefacts such as gaps between the lines and it lagged
+				// IsAntialias = true
 			});
 		}
 	}

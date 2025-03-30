@@ -1,13 +1,15 @@
 ﻿@using SkiaSharp.Views.Blazor
 
-<SKCanvasView @ref="_canvas"
-              id="@("_" + _id)"
-              OnPaintSurface="onPaintSurface"
-              @onmousedown="onMouseDown"
-              @onmousemove="onMouseMove"
-              @onmouseup="onMouseUp"
-              @onwheel="onMouseWheel"
-></SKCanvasView>
+<ErrorBoundary>
+    <SKCanvasView @ref="_canvas"
+                  id="@("_" + _id)"
+                  OnPaintSurface="onPaintSurface"
+                  @onmousedown="onMouseDown"
+                  @onmousemove="onMouseMove"
+                  @onmouseup="onMouseUp"
+                  @onwheel="onMouseWheel"
+    ></SKCanvasView>
+</ErrorBoundary>
 
 <style>
     @("#_" + _id + "{"

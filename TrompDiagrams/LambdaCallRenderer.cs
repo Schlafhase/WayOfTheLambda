@@ -3,7 +3,7 @@ using TrompDiagrams.Rendering;
 
 namespace TrompDiagrams;
 
-public class LambdaCallRenderer(LambdaCall c) : ILambdaRenderer
+public class LambdaCallRenderer(LambdaApplication c) : ILambdaRenderer
 {
 	public Geometry Render(Dictionary<string, int> variableHeights, int currentHeight = 0)
 	{

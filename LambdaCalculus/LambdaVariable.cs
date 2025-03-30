@@ -11,7 +11,7 @@ public class LambdaVariable : LambdaExpression
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
-		return this == variable ? expression : this;
+		return CapturingLambda == variable.CapturingLambda ? expression : this;
 	}
 
 	public override LambdaExpression AlphaConvert()
@@ -26,7 +26,7 @@ public class LambdaVariable : LambdaExpression
 		
 		while (current is not null)
 		{
-			if (current is LambdaDefinition lambdaDefinition)
+			if (current is LambdaAbstraction lambdaDefinition)
 			{
 				index++;
 				if (lambdaDefinition.CapturedVariable.Name == Name)
@@ -41,9 +41,9 @@ public class LambdaVariable : LambdaExpression
 		return "0";
 	}
 
-	public override LambdaExpression BetaReduce()
+	public override LambdaExpression? BetaReduce(bool checkForBetaNormalForm = true)
 	{
-		return this;
+		return checkForBetaNormalForm ? null : this;
 	}
 	
 	public override bool VariableIsFree(string name)
@@ -51,7 +51,7 @@ public class LambdaVariable : LambdaExpression
 		return true;
 	}
 
-	public LambdaDefinition? CapturingLambda
+	public LambdaAbstraction? CapturingLambda
 	{
 		get
 		{
@@ -59,7 +59,7 @@ public class LambdaVariable : LambdaExpression
 			
 			while (current is not null)
 			{
-				if (current is LambdaDefinition lambdaDefinition)
+				if (current is LambdaAbstraction lambdaDefinition)
 				{
 					if (lambdaDefinition.CapturedVariable.Name == Name)
 					{
@@ -71,15 +71,5 @@ public class LambdaVariable : LambdaExpression
 			}
 			return null;
 		}
-	}
-
-	public override bool Equals(LambdaExpression? other)
-	{
-		if (other is LambdaVariable variable)
-		{
-			return Name == variable.Name && ReferenceEquals(CapturingLambda, variable.CapturingLambda);
-		}
-
-		return false;
 	}
 }

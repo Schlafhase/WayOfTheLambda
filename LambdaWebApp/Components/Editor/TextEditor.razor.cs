@@ -11,6 +11,7 @@ public partial class TextEditor : ComponentBase
 	[Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
 	[Inject] private ClipboardService _clipboard { get; set; } = null!;
 
+	#region Properties
 	private ElementReference _editor;
 
 	private List<string> _lines = [""];
@@ -18,6 +19,9 @@ public partial class TextEditor : ComponentBase
 	private int _cursorColumn = 0;
 	private int _previousCursorColumn = 0; // Keep the cursor in the same column when moving up or down
 	// TODO: indentation preservation
+	
+	private (int line, int column) _selectionStart = (-1, -1);
+	private (int line, int column) _selectionEnd = (-1, -1);
 	
 	private bool _idling = false;
 	private Timer _idleTimer;
@@ -37,6 +41,7 @@ public partial class TextEditor : ComponentBase
 	}
 
 	public event Action? TextChanged;
+	public event Func<Task>? OnStartIdlingAsync;
 
 	private int cursorColumn
 	{
@@ -57,7 +62,7 @@ public partial class TextEditor : ComponentBase
 		}
 	}
 
-	private void stopIdling()
+	private async Task stopIdling()
 	{
 		_lastInput = DateTime.Now;
 		_idling = false;
@@ -66,7 +71,7 @@ public partial class TextEditor : ComponentBase
 
 	public TextEditor()
 	{
-		_idleTimer = new Timer(_ =>
+		_idleTimer = new Timer(async _ =>
 		{
 			if (_idling || _lastInput.AddMilliseconds(500) >= DateTime.Now)
 			{
@@ -74,9 +79,16 @@ public partial class TextEditor : ComponentBase
 			}
 
 			_idling = true;
+			
+			if (OnStartIdlingAsync is not null)
+			{
+				await OnStartIdlingAsync();
+			}
+			
 			StateHasChanged();
 		}, null, 0, 10);
 	}
+	#endregion
 
 	private List<Token> tokenise()
 	{
@@ -176,22 +188,24 @@ public partial class TextEditor : ComponentBase
 		return tokens;
 	}
 
-
+	#region Cursor
 	// TODO: Selections
-	private void onEditorClick(MouseEventArgs e)
+	private async Task onEditorClick(MouseEventArgs e)
 	{
 		int x = (int)Math.Round(e.OffsetX / characterWidth);
 		int y = (int)(e.OffsetY / characterHeight);
 
 		cursorLine = Math.Clamp(y, 0, _lines.Count - 1);
 		cursorColumn = Math.Clamp(x, 0, _lines[cursorLine].Length);
-		stopIdling();
+		await stopIdling();
 		StateHasChanged();
 	}
+	#endregion
 
+	#region Keyboard
 	private async Task onEditorKeyDown(KeyboardEventArgs e)
 	{
-		stopIdling();
+		await stopIdling();
 		
 		bool ctrl = e.CtrlKey;
 
@@ -207,7 +221,7 @@ public partial class TextEditor : ComponentBase
 				
 				if (lineOffsetLeft == -1)
 				{
-					moveCursorLeft();
+					await moveCursorLeft();
 					return;
 				}
 				
@@ -218,23 +232,23 @@ public partial class TextEditor : ComponentBase
 				
 				if (lineOffsetRight == 1)
 				{
-					moveCursorRight();
+					await moveCursorRight();
 					return;
 				}
 				
 				cursorColumn = endOfWordRight;
 				return;
 			case "ArrowLeft":
-				moveCursorLeft();
+				await moveCursorLeft();
 				return;
 			case "ArrowRight":
-				moveCursorRight();
+				await moveCursorRight();
 				return;
 			case "ArrowUp":
-				moveCursorUp();
+				await moveCursorUp();
 				return;
 			case "ArrowDown":
-				moveCursorDown();
+				await moveCursorDown();
 				return;
 			case "Backspace" when ctrl:
 				int endOfWordBackspace = findEndOfWord(out int lineOffsetBackspace);
@@ -284,6 +298,7 @@ public partial class TextEditor : ComponentBase
 				string text = await _clipboard.ReadTextAsync();
 				_lines[cursorLine] = _lines[cursorLine].Insert(cursorColumn, text);
 				cursorColumn += text.Length;
+				TextChanged?.Invoke();
 				return;
 		}
 
@@ -304,7 +319,7 @@ public partial class TextEditor : ComponentBase
 		TextChanged?.Invoke();
 	}
 	
-	private void moveCursorLeft()
+	private async Task moveCursorLeft()
 	{
 		if (cursorColumn == 0)
 		{
@@ -321,10 +336,10 @@ public partial class TextEditor : ComponentBase
 		{
 			cursorColumn--;
 		}
-		stopIdling();
+		await stopIdling();
 	}
 	
-	private void moveCursorRight()
+	private async Task moveCursorRight()
 	{
 		if (cursorColumn == _lines[cursorLine].Length)
 		{
@@ -341,10 +356,10 @@ public partial class TextEditor : ComponentBase
 		{
 			cursorColumn++;
 		}
-		stopIdling();
+		await stopIdling();
 	}
 	
-	private void moveCursorUp()
+	private async Task moveCursorUp()
 	{
 		if (cursorLine == 0)
 		{
@@ -356,10 +371,10 @@ public partial class TextEditor : ComponentBase
 		
 		// Change cursor column without changing _previousCursorColumn
 		_cursorColumn = Math.Min(_previousCursorColumn, _lines[cursorLine].Length);
-		stopIdling();
+		await stopIdling();
 	}
 	
-	private void moveCursorDown()
+	private async Task moveCursorDown()
 	{
 		if (cursorLine == _lines.Count - 1)
 		{
@@ -371,7 +386,7 @@ public partial class TextEditor : ComponentBase
 		
 		// Change cursor column without changing _previousCursorColumn
 		_cursorColumn = Math.Min(_previousCursorColumn, _lines[cursorLine].Length);
-		stopIdling();
+		await stopIdling();
 	}
 
 	private void removeSingleCharacter(bool inFront = false)
@@ -452,7 +467,6 @@ public partial class TextEditor : ComponentBase
 					continue;
 				}
 
-				char.IsWhiteSpace(_lines[cursorLine][i]);
 				return 0;
 			}
 		}
@@ -492,4 +506,5 @@ public partial class TextEditor : ComponentBase
 		Whitespace,
 		Default
 	}
+	#endregion
 }

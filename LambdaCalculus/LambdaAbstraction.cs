@@ -2,25 +2,25 @@
 
 namespace LambdaCalculus;
 
-public class LambdaDefinition : LambdaExpression
+public class LambdaAbstraction : LambdaExpression
 {
 	private LambdaVariable _capturedVariable;
-	private LambdaExpression _body;
+	private LambdaExpression? _body;
 
 	public LambdaVariable CapturedVariable
 	{
 		get => _capturedVariable;
-		init
+		set
 		{
 			_capturedVariable = value;
 			_capturedVariable.Parent = this;
 		}
 	}
 
-	public LambdaExpression Body
+	public LambdaExpression? Body
 	{
 		get => _body;
-		init
+		set
 		{
 			_body = value;
 			_body.Parent = this;
@@ -39,7 +39,7 @@ public class LambdaDefinition : LambdaExpression
 			return this;
 		}
 
-		return new LambdaDefinition
+		return new LambdaAbstraction
 		{
 			CapturedVariable = CapturedVariable,
 			Body = Body.Substitute(variable, expression)
@@ -51,10 +51,10 @@ public class LambdaDefinition : LambdaExpression
 		// string newName = Guid.NewGuid().ToString();
 		string newName = GetFreeVariableName(CapturedVariable.Name);
 
-		return new LambdaDefinition
+		return new LambdaAbstraction
 		{
 			CapturedVariable = new LambdaVariable { Name = newName },
-			Body = Body.Substitute(CapturedVariable, new LambdaVariable { Name = newName }).AlphaConvert()
+			Body = Body.Substitute(CapturedVariable, new LambdaVariable { Name = newName, Parent = this}).AlphaConvert()
 		};
 	}
 
@@ -63,24 +63,22 @@ public class LambdaDefinition : LambdaExpression
 		return "λ." + Body.ToBruijnIndex();
 	}
 
-	public override LambdaExpression BetaReduce()
+	public override LambdaExpression? BetaReduce(bool checkForBetaNormalForm = true)
 	{
-		return new LambdaDefinition
+		if (checkForBetaNormalForm && IsBetaNormalForm())
 		{
-			CapturedVariable = CapturedVariable,
-			Body = Body.BetaReduce()
+			return null;
+		}
+		
+		return new LambdaAbstraction
+		{
+			CapturedVariable = CapturedVariable.Clone() as LambdaVariable,
+			Body = Body.BetaReduce(false)!
 		};
 	}
 
 	public override bool VariableIsFree(string name)
 	{
 		return CapturedVariable.Name != name && Body.VariableIsFree(name);
-	}
-	
-	public override bool Equals(LambdaExpression? other)
-	{
-		return other is LambdaDefinition definition &&
-			CapturedVariable.Equals(definition.CapturedVariable) &&
-			Body.Equals(definition.Body);
 	}
 }
