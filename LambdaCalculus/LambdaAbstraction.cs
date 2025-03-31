@@ -36,7 +36,7 @@ public class LambdaAbstraction : LambdaExpression
 	{
 		if (variable == CapturedVariable)
 		{
-			return this;
+			return Clone();
 		}
 
 		return new LambdaAbstraction
@@ -46,15 +46,15 @@ public class LambdaAbstraction : LambdaExpression
 		};
 	}
 
-	public override LambdaExpression AlphaConvert()
+	public override LambdaExpression AlphaConvert(LambdaExpression root)
 	{
 		// string newName = Guid.NewGuid().ToString();
-		string newName = GetFreeVariableName(CapturedVariable.Name);
+		string newName = GetFreeVariableName(CapturedVariable.Name, root);
 
 		return new LambdaAbstraction
 		{
 			CapturedVariable = new LambdaVariable { Name = newName },
-			Body = Body.Substitute(CapturedVariable, new LambdaVariable { Name = newName, Parent = this}).AlphaConvert()
+			Body = Body.Substitute(CapturedVariable, new LambdaVariable { Name = newName}).AlphaConvert(root)
 		};
 	}
 

@@ -71,12 +71,12 @@ public class LambdaApplication : LambdaExpression
 		};
 	}
 
-	public override LambdaExpression AlphaConvert()
+	public override LambdaExpression AlphaConvert(LambdaExpression root)
 	{
 		return new LambdaApplication
 		{
-			Function = Function.AlphaConvert(),
-			Argument = Argument.AlphaConvert()
+			Function = Function.AlphaConvert(root),
+			Argument = Argument.AlphaConvert(root)
 		};
 	}
 
@@ -102,9 +102,8 @@ public class LambdaApplication : LambdaExpression
 			};
 		}
 
-		LambdaAbstraction? newDefinition = (lambdaDefinition.AlphaConvert() as LambdaAbstraction);
-		return newDefinition.Body.Substitute(newDefinition.CapturedVariable, Argument.AlphaConvert());
-
+		LambdaExpression argument = Argument.AlphaConvert(lambdaDefinition);
+		return lambdaDefinition.Body.Substitute(lambdaDefinition.CapturedVariable, argument);
 	}
 
 	public override bool VariableIsFree(string name)

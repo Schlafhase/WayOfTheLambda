@@ -30,6 +30,17 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 	private void onTextChanged()
 	{
 		_dirty = true;
+		
+	}
+
+	private async Task onStartIdling()
+	{
+		if (!_dirty)
+		{
+			return;
+		}
+		_dirty = false;
+		
 		try
 		{
 			_currentExpression = LambdaExpression.Parse(_textEditor.Text);
@@ -49,16 +60,6 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 		
 		_diagramView.LambdaExpression = _currentExpression;
 		_betaReductionView.ErrorMessage = "";
-		StateHasChanged();
-	}
-
-	private async Task onStartIdling()
-	{
-		if (!_dirty)
-		{
-			return;
-		}
-		_dirty = false;
 		
 		await _betaReductionView.SetLambdaExpression(_currentExpression);
 		StateHasChanged();

@@ -11,12 +11,12 @@ public class LambdaVariable : LambdaExpression
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
-		return CapturingLambda == variable.CapturingLambda ? expression : this;
+		return CapturingLambda == variable.CapturingLambda ? expression : Clone();
 	}
 
-	public override LambdaExpression AlphaConvert()
+	public override LambdaExpression AlphaConvert(LambdaExpression root)
 	{
-		return this;
+		return Clone();
 	}
 
 	public override string ToBruijnIndex()
@@ -43,7 +43,7 @@ public class LambdaVariable : LambdaExpression
 
 	public override LambdaExpression? BetaReduce(bool checkForBetaNormalForm = true)
 	{
-		return checkForBetaNormalForm ? null : this;
+		return checkForBetaNormalForm ? null : Clone();
 	}
 	
 	public override bool VariableIsFree(string name)

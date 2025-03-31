@@ -12,7 +12,7 @@ public abstract partial class LambdaExpression
 	/// Changes all variable names in an expression to unique names.
 	/// </summary>
 	/// <returns></returns>
-	public abstract LambdaExpression AlphaConvert();
+	public abstract LambdaExpression AlphaConvert(LambdaExpression root);
 
 	public abstract string ToBruijnIndex();
 
@@ -50,10 +50,10 @@ public abstract partial class LambdaExpression
 		}
 	}
 
-	public string GetFreeVariableName(string name)
+	public string GetFreeVariableName(string name, LambdaExpression root)
 	{
-		// TODO: eta conversion
-		if (Root.VariableIsFree(name))
+		// TODO: eta conversion maybe this is connected to the problem with factorial
+		if (root.VariableIsFree(name))
 		{
 			return name;
 		}
@@ -98,37 +98,23 @@ public abstract partial class LambdaExpression
 		return ToBruijnIndex() == other.ToBruijnIndex();
 	}
 
-	public LambdaExpression? Clone(LambdaExpression? parent = null)
+	public LambdaExpression Clone()
 	{
-		LambdaExpression? clone;
-
-		switch (this)
+		return this switch
 		{
-			case LambdaVariable variable:
-				clone = new LambdaVariable { Name = variable.Name, Parent = parent };
-				break;
-			case LambdaAbstraction definition:
-				clone = new LambdaAbstraction
-				{
-					Parent = parent
-				};
-				(clone as LambdaAbstraction).CapturedVariable = definition.CapturedVariable.Clone(clone) as LambdaVariable;
-				(clone as LambdaAbstraction).Body = definition.Body.Clone(clone);
-				break;
-			case LambdaApplication call:
-				clone = new LambdaApplication
-				{
-					Parent = parent
-				};
-				(clone as LambdaApplication).Function = call.Function.Clone(clone);
-				(clone as LambdaApplication).Argument = call.Argument.Clone(clone);
-				break;
-			default:
-				clone = null;
-				break;
-		}
-		
-		return clone;
+			LambdaVariable variable => new LambdaVariable { Name = variable.Name },
+			LambdaAbstraction definition => new LambdaAbstraction
+			{
+				CapturedVariable = new LambdaVariable { Name = definition.CapturedVariable.Name },
+				Body = definition.Body.Clone()
+			},
+			LambdaApplication call => new LambdaApplication
+			{
+				Function = call.Function.Clone(),
+				Argument = call.Argument.Clone()
+			},
+			_ => throw new NotImplementedException()
+		};
 	}
 
 	public static LambdaExpression TRUE() =>
