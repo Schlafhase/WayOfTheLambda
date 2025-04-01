@@ -34,7 +34,7 @@ public class LambdaAbstraction : LambdaExpression
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
-		if (variable == CapturedVariable)
+		if (variable.Name == CapturedVariable.Name)
 		{
 			return Clone();
 		}

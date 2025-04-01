@@ -11,7 +11,7 @@ public class LambdaVariable : LambdaExpression
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
-		return CapturingLambda == variable.CapturingLambda ? expression : Clone();
+		return CapturingLambda?.AlphaEquivalent(variable.CapturingLambda) ?? false ? expression : Clone(); // TODO: Probably replace alpha equivalent
 	}
 
 	public override LambdaExpression AlphaConvert(LambdaExpression root)

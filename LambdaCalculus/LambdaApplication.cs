@@ -35,17 +35,18 @@ public class LambdaApplication : LambdaExpression
 			{
 				return "(" + Function + ") (" + Argument + ")";
 			}
+
 			return "(" + Function + ") " + Argument;
 		}
 
 		return Argument switch
 		{
 			LambdaAbstraction => Function + " (" + Argument + ")",
-			LambdaApplication       => Function + " (" + Argument + ")",
-			_                => Function + " " + Argument
+			LambdaApplication => Function + " (" + Argument + ")",
+			_                 => Function + " " + Argument
 		};
 	}
-	
+
 	// private static bool needsParentheses(LambdaExpression left)
 	// {
 	// 	if (left is not LambdaCall call)
@@ -60,7 +61,7 @@ public class LambdaApplication : LambdaExpression
 	// 		_                => true
 	// 	};
 	// }
-	
+
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
@@ -92,7 +93,7 @@ public class LambdaApplication : LambdaExpression
 		{
 			return null;
 		}
-		
+
 		if (Function is not LambdaAbstraction lambdaDefinition)
 		{
 			return new LambdaApplication
