@@ -8,6 +8,11 @@ public class Geometry
 {
 	public List<Line> Lines { get; init; } = [];
 
+	/// <summary>
+	/// 
+	/// </summary>
+	/// <param name="includeNegative">i forgot why i added this but i'm too scared to remove it</param>
+	/// <returns></returns>
 	public (int Width, int Height) GetDimensions(bool includeNegative = false)
 	{
 		(int X, int Y) offset = GetNegativeOffset(this);
@@ -153,19 +158,7 @@ public class Geometry
 		
 		foreach (Line line in offsetGeometry.Lines)
 		{
-			switch (line)
-			{
-				case HorizontalLine hLine:
-				{
-					canvas.DrawLine(hLine.X, hLine.Y, hLine.X + hLine.Length, hLine.Y, new SKPaint { Color = SKColors.Black });
-					break;
-				}
-				case VerticalLine vLine:
-				{
-					canvas.DrawLine(vLine.X, vLine.Y, vLine.X, vLine.Y + vLine.Length, new SKPaint { Color = SKColors.Black });
-					break;
-				}
-			}
+			canvas.DrawLine(line.X, line.Y, line.X2, line.Y2, new SKPaint { Color = SKColors.White });
 		}
 		
 		return bitmap;

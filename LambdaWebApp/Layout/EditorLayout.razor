@@ -5,10 +5,11 @@
 
 <MenuRow>
     <MenuCategory Name="File">
-        <MenuButton Name="hello"/>
-        <MenuButton Name="hello2"/>
+        <MenuButton Name="Export diagram as JSON" OnClickAsync="downloadDiagramJson"/>
+        <MenuButton Name="Export diagram as PNG" OnClickAsync="downloadDiagramBitmap"/>
+        <MenuButton Name="Export diagram as PNG (HD)" OnClickAsync="downloadDiagramHD"/>
     </MenuCategory>
-    <MenuCategory Name="Preferences"></MenuCategory>
+    @* <MenuCategory Name="Preferences"></MenuCategory> *@
     <MenuCategory Name="Contribute">
         <MenuLink Name="GitHub" Href="https://github.com/Schlafhase/WayOfTheLambda"/>
     </MenuCategory>
@@ -32,3 +33,17 @@
         </LayoutItem>
     </HorizontalDynamicLayout>
 </div>
+
+<script>
+  window.downloadFileFromStream = async (fileName, contentStreamReference) => {
+    const arrayBuffer = await contentStreamReference.arrayBuffer();
+    const blob = new Blob([arrayBuffer]);
+    const url = URL.createObjectURL(blob);
+    const anchorElement = document.createElement('a');
+    anchorElement.href = url;
+    anchorElement.download = fileName ?? '';
+    anchorElement.click();
+    anchorElement.remove();
+    URL.revokeObjectURL(url);
+  }
+</script>

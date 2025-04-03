@@ -8,5 +8,5 @@ public partial class MenuButton : ComponentBase
 	public string Name { get; set; }
 	
 	[Parameter]
-	public Action? OnClick { get; set; }
+	public Func<Task>? OnClickAsync { get; set; }
 }

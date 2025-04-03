@@ -1,7 +1,11 @@
-﻿namespace TrompDiagrams.Rendering;
+﻿using System.Text.Json.Serialization;
+
+namespace TrompDiagrams.Rendering;
 
 public class VerticalLine : Line
 {
-	public override int Width => 2; // Padding
-	public override int Height => Length;
+	[JsonIgnore] public override int Width => 2; // Padding
+	[JsonIgnore] public override int Height => Length;
+	public override int X2 => X;
+	public override int Y2 => Y + Length;
 }

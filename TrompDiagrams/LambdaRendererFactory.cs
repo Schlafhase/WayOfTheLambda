@@ -8,10 +8,10 @@ public static class LambdaRendererFactory
 	{
 		return e switch
 		{
-			LambdaVariable v   => new LambdaVariableRenderer(v),
-			LambdaAbstraction d => new LambdaDefinitionRenderer(d),
-			LambdaApplication c       => new LambdaCallRenderer(c),
-			_                  => throw new NotImplementedException()
+			LambdaVariable v    => new LambdaVariableRenderer(v),
+			LambdaAbstraction d => new LambdaAbstractionRenderer(d),
+			LambdaApplication c => new LambdaApplicationRenderer(c),
+			_                   => throw new NotImplementedException()
 		};
 	}
 }

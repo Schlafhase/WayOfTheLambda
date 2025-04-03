@@ -17,7 +17,7 @@ public partial class DiagramView : ComponentBase
 		set
 		{
 			_lambdaExpression = value;
-			_geometry = LambdaExpressionRenderer.Render(value);
+			Geometry = LambdaExpressionRenderer.Render(value);
 
 			try
 			{
@@ -36,7 +36,7 @@ public partial class DiagramView : ComponentBase
 	[Parameter] public int? Width { get; set; } = null;
 	[Parameter] public int? Height { get; set; } = null;
 
-	private Geometry _geometry;
+	public Geometry Geometry { get; private set; }
 	private SKColor _lineColor = SKColor.FromHsl(52, 68, 54);
 
 	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
@@ -76,7 +76,7 @@ public partial class DiagramView : ComponentBase
 		e.Surface.Canvas.Translate(CameraX, CameraY);
 		e.Surface.Canvas.Scale((float)Zoom);
 
-		foreach (Line line in _geometry.Lines)
+		foreach (Line line in Geometry.Lines)
 		{
 			int startX = 0;
 			int startY = 0;

@@ -3,18 +3,18 @@ using TrompDiagrams.Rendering;
 
 namespace TrompDiagrams;
 
-public class LambdaCallRenderer(LambdaApplication c) : ILambdaRenderer
+public class LambdaApplicationRenderer(LambdaApplication a) : ILambdaRenderer
 {
 	public Geometry Render(Dictionary<string, int> variableHeights, int currentHeight = 0)
 	{
 		Geometry g = new();
 		Geometry function = LambdaRendererFactory
-							.CreateLambdaRenderer(c.Function)
+							.CreateLambdaRenderer(a.Function)
 							.Render(variableHeights, currentHeight);
 		(int Width, int Height) functionDimensions = function.GetDimensions();
 
 		Geometry argument = LambdaRendererFactory
-							.CreateLambdaRenderer(c.Argument)
+							.CreateLambdaRenderer(a.Argument)
 							.Render(variableHeights, currentHeight);
 		(int Width, int Height) argumentDimensions = argument.GetDimensions();
 

@@ -1,11 +1,16 @@
-﻿namespace TrompDiagrams.Rendering;
+﻿using Newtonsoft.Json;
+
+namespace TrompDiagrams.Rendering;
 
 public abstract class Line
 {
-	public int Length { get; init; } = 3;
+	[JsonIgnore] public int Length { get; init; } = 3;
 	public int X { get; init; }
 	public int Y { get; init; }
 	
-	public abstract int Width { get; }
-	public abstract int Height { get; }
+	public abstract int X2 { get; }
+	public abstract int Y2 { get; }
+
+	[JsonIgnore] public abstract int Width { get; }
+	[JsonIgnore] public abstract int Height { get; }
 }
