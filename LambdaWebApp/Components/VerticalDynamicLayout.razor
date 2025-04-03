@@ -9,12 +9,12 @@
 
     window.addSeparatorV = function (id) {
         // console.log("Adding separator");
-        
+
         const previousSeparator = document.querySelector("#_" + id + " .separator-v");
         if (previousSeparator) {
             previousSeparator.remove();
         }
-        
+
         const layoutItem = document.querySelector("#_" + id + " layoutitem");
 
         const separator = document.createElement("div");
@@ -28,7 +28,7 @@
             window.onmousemove = (e) => {
                 const rect = container.getBoundingClientRect();
                 const totalHeight = rect.height;
-                const heightInPercent = (clamp(e.clientY - rect.top, 20, totalHeight-20) / totalHeight) * 100;
+                const heightInPercent = (clamp(e.clientY - rect.top, 20, totalHeight - 20) / totalHeight) * 100;
                 const layoutItem1 = layoutItem;
                 const layoutItem2 = separator.nextElementSibling;
                 // console.log("e.clientX: " + e.clientX + " totalWidth: " + totalHeight + " widthInPercent: " + heightInPercent);

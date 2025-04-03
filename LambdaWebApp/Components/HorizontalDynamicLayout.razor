@@ -11,7 +11,7 @@
 
     window.addSeparator = function (id) {
         console.log("Adding separator");
-        
+
         const previousSeparator = document.querySelector("#_" + id + " .separator");
         if (previousSeparator) {
             previousSeparator.ondragstart = null;
@@ -19,7 +19,7 @@
             previousSeparator.onmouseup = null;
             previousSeparator.remove();
         }
-        
+
         const layoutItem = document.querySelector("#_" + id + " layoutitem");
 
         const separator = document.createElement("div");
@@ -32,7 +32,7 @@
             window.onmousemove = (e) => {
                 const rect = container.getBoundingClientRect();
                 const totalWidth = rect.width;
-                const widthInPercent = (clamp(e.clientX - rect.left, 20, totalWidth-20) / totalWidth) * 100;
+                const widthInPercent = (clamp(e.clientX - rect.left, 20, totalWidth - 20) / totalWidth) * 100;
                 const layoutItem1 = layoutItem;
                 const layoutItem2 = separator.nextElementSibling;
                 // console.log("e.clientX: " + e.clientX + " totalWidth: " + totalWidth + " widthInPercent: " + widthInPercent);
@@ -73,7 +73,7 @@
         width: 2px;
         position: relative;
     }
-    
+
     .separator div {
         position: absolute;
         width: 10px;

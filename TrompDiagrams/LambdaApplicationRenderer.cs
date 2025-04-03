@@ -18,13 +18,13 @@ public class LambdaApplicationRenderer(LambdaApplication a) : ILambdaRenderer
 							.Render(variableHeights, currentHeight);
 		(int Width, int Height) argumentDimensions = argument.GetDimensions();
 
-		int functionExtension = functionDimensions.Height > (argumentDimensions.Height + 1)
+		int functionExtension = functionDimensions.Height > argumentDimensions.Height + 1
 			? 1
-			: (argumentDimensions.Height + 1) - functionDimensions.Height;
-		
-		int argumentExtension = argumentDimensions.Height > (functionDimensions.Height + 1)
+			: argumentDimensions.Height + 1 - functionDimensions.Height;
+
+		int argumentExtension = argumentDimensions.Height > functionDimensions.Height + 1
 			? 1
-			: (functionDimensions.Height + 1) - argumentDimensions.Height;
+			: functionDimensions.Height + 1 - argumentDimensions.Height;
 
 		function += new VerticalLine
 		{
@@ -53,7 +53,7 @@ public class LambdaApplicationRenderer(LambdaApplication a) : ILambdaRenderer
 
 		// g.CombineWithOffset(argument, (application.X + application.Width - 1, -2));
 		return g;
-		
+
 		// Geometry result = new Geometry();
 		// result.CombineWithOffset(g, (0, 1));
 		// return result;

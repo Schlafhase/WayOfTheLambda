@@ -66,6 +66,7 @@
 #editor:focus[data-idling='true'] #cursor::after {
     animation: blink 1s infinite;
 }
+
 #editor:focus[data-idling='false'] #cursor::after {
     animation-play-state: paused;
 }

@@ -1,9 +1,9 @@
 ﻿#row {
     display: flex;
     flex-direction: row;
-    
+
     pointer-events: all;
-    
+
     width: 100%;
     /*position: fixed;*/
     /*top: 0;*/
@@ -11,10 +11,10 @@
     background: linear-gradient(13deg, var(--theme-color), var(--theme-color-darkest));
     overflow-x: auto;
     color: var(--theme-color-text);
-    
-    -ms-overflow-style: none;  /* Internet Explorer 10+ */
-    scrollbar-width: none;  /* Firefox */
-    
+
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+    scrollbar-width: none; /* Firefox */
+
     user-select: none;
     -webkit-user-select: none;
 }
@@ -32,7 +32,7 @@
 }
 
 #row::-webkit-scrollbar {
-    display: none;  /* Safari and Chrome */
+    display: none; /* Safari and Chrome */
 }
 
 #logo {

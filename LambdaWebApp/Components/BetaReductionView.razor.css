@@ -10,7 +10,7 @@
     padding-right: 1em;
     overflow: auto;
     direction: rtl;
-    
+
     scrollbar-color: var(--theme-color-light) transparent;
     scrollbar-width: var(--editor-scrollbar-width);
     scroll-margin: var(--editor-line-height);

@@ -2,37 +2,38 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Lambda Calculus Editor</title>
-    <base href="/" />
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="icon" type="image/png" href="lambdaDot.svg" />
-    <link href="LambdaWebApp.styles.css" rel="stylesheet" />
+    <base href="/"/>
+
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link crossorigin href="https://fonts.gstatic.com" rel="preconnect">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap"
+          rel="stylesheet">
+
+    <link href="lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="css/app.css" rel="stylesheet"/>
+    <link href="lambdaDot.svg" rel="icon" type="image/png"/>
+    <link href="LambdaWebApp.styles.css" rel="stylesheet"/>
 </head>
 
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
-    </div>
+<div id="app">
+    <svg class="loading-progress">
+        <circle cx="50%" cy="50%" r="40%"/>
+        <circle cx="50%" cy="50%" r="40%"/>
+    </svg>
+    <div class="loading-progress-text"></div>
+</div>
 
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
-    </div>
-    <script src="_framework/blazor.webassembly.js"></script>
-    <script src="_content/CurrieTechnologies.Razor.Clipboard/clipboard.min.js"></script>
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a class="reload" href=".">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+<script src="_framework/blazor.webassembly.js"></script>
+<script src="_content/CurrieTechnologies.Razor.Clipboard/clipboard.min.js"></script>
 </body>
 
 <style>
@@ -49,7 +50,7 @@
         width: 100%;
         z-index: 1000;
     }
-    
+
     .reload {
         color: var(--theme-color-accent);
         cursor: default;

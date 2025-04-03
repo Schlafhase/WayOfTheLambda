@@ -9,10 +9,10 @@ public static class LambdaExpressionRenderer
 	{
 		return lambdaExpression switch
 		{
-			LambdaVariable lambdaVariable     => new LambdaVariableRenderer(lambdaVariable).Render([]),
-			LambdaApplication lambdaCall             => new LambdaApplicationRenderer(lambdaCall).Render([]),
+			LambdaVariable lambdaVariable      => new LambdaVariableRenderer(lambdaVariable).Render([]),
+			LambdaApplication lambdaCall       => new LambdaApplicationRenderer(lambdaCall).Render([]),
 			LambdaAbstraction lambdaDefinition => new LambdaAbstractionRenderer(lambdaDefinition).Render([]),
-			_                                 => throw new NotImplementedException()
+			_                                  => throw new NotImplementedException()
 		};
 	}
 }

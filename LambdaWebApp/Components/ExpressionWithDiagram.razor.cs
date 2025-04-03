@@ -5,6 +5,29 @@ namespace LambdaWebApp.Components;
 
 public partial class ExpressionWithDiagram : ComponentBase, IDisposable
 {
+	private DiagramView _diagramView = null!;
+	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
+	private Action _updateDiagram = null!;
+
+	public ExpressionWithDiagram()
+	{
+		_updateDiagram = () =>
+		{
+			try
+			{
+				_diagramView.LambdaExpression = _lambdaExpression;
+			}
+			catch (InvalidOperationException)
+			{
+				// Ignore
+			}
+			catch (NullReferenceException)
+			{
+				// Ignore
+			}
+		};
+	}
+
 	[Parameter]
 	public LambdaExpression LambdaExpression
 	{
@@ -29,37 +52,13 @@ public partial class ExpressionWithDiagram : ComponentBase, IDisposable
 	}
 
 
-	private DiagramView _diagramView = null!;
-	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
-	private Action _updateDiagram = null!;
-
-	public ExpressionWithDiagram()
+	public void Dispose()
 	{
-		_updateDiagram = () =>
-		{
-			try
-			{
-				_diagramView.LambdaExpression = _lambdaExpression;
-			}
-			catch (InvalidOperationException)
-			{
-				// Ignore
-			}
-			catch (NullReferenceException)
-			{
-				// Ignore
-			}
-		};
+		// Clock.OnTick -= _updateDiagram;
 	}
 
 	protected override void OnInitialized()
 	{
 		// Clock.OnTick += _updateDiagram; // TODO: make this more efficient
-	}
-
-
-	public void Dispose()
-	{
-		// Clock.OnTick -= _updateDiagram;
 	}
 }

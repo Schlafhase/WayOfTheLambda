@@ -1,11 +1,9 @@
-﻿using System.Diagnostics;
-
-namespace LambdaCalculus;
+﻿namespace LambdaCalculus;
 
 public class LambdaAbstraction : LambdaExpression
 {
-	private LambdaVariable _capturedVariable;
 	private LambdaExpression? _body;
+	private LambdaVariable _capturedVariable;
 
 	public LambdaVariable CapturedVariable
 	{
@@ -27,10 +25,7 @@ public class LambdaAbstraction : LambdaExpression
 		}
 	}
 
-	public override string ToString()
-	{
-		return "λ" + CapturedVariable + "." + Body;
-	}
+	public override string ToString() => "λ" + CapturedVariable + "." + Body;
 
 	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
 	{
@@ -54,14 +49,11 @@ public class LambdaAbstraction : LambdaExpression
 		return new LambdaAbstraction
 		{
 			CapturedVariable = new LambdaVariable { Name = newName },
-			Body = Body.Substitute(CapturedVariable, new LambdaVariable { Name = newName}).AlphaConvert(root)
+			Body = Body.Substitute(CapturedVariable, new LambdaVariable { Name = newName }).AlphaConvert(root)
 		};
 	}
 
-	public override string ToBruijnIndex()
-	{
-		return "λ." + Body.ToBruijnIndex();
-	}
+	public override string ToBruijnIndex() => "λ." + Body.ToBruijnIndex();
 
 	public override LambdaExpression? BetaReduce(bool checkForBetaNormalForm = true)
 	{
@@ -69,7 +61,7 @@ public class LambdaAbstraction : LambdaExpression
 		{
 			return null;
 		}
-		
+
 		return new LambdaAbstraction
 		{
 			CapturedVariable = CapturedVariable.Clone() as LambdaVariable,
@@ -77,8 +69,5 @@ public class LambdaAbstraction : LambdaExpression
 		};
 	}
 
-	public override bool VariableIsFree(string name)
-	{
-		return CapturedVariable.Name != name && Body.VariableIsFree(name);
-	}
+	public override bool VariableIsFree(string name) => CapturedVariable.Name != name && Body.VariableIsFree(name);
 }

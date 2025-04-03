@@ -10,14 +10,20 @@ namespace LambdaWebApp.Layout;
 
 public partial class EditorLayout : LayoutComponentBase, IDisposable
 {
-	[Inject] private IJSRuntime _jsRuntime { get; set; }
-	
-	private TextEditor _textEditor = null!;
 	private BetaReductionView _betaReductionView = null!;
-	private DiagramView _diagramView = null!;
 	private LambdaExpression _currentExpression = LambdaExpression.Parse("λx.x");
-	
-	private bool _dirty = false;
+	private DiagramView _diagramView = null!;
+
+	private bool _dirty;
+
+	private TextEditor _textEditor = null!;
+	[Inject] private IJSRuntime _jsRuntime { get; set; }
+
+	public void Dispose()
+	{
+		_textEditor.TextChanged -= onTextChanged;
+		_textEditor.OnStartIdlingAsync -= onStartIdling;
+	}
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
@@ -35,7 +41,6 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 	private void onTextChanged()
 	{
 		_dirty = true;
-		
 	}
 
 	private async Task onStartIdling()
@@ -44,8 +49,9 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 		{
 			return;
 		}
+
 		_dirty = false;
-		
+
 		try
 		{
 			_currentExpression = LambdaExpression.Parse(_textEditor.Text);
@@ -62,10 +68,10 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 			StateHasChanged();
 			return;
 		}
-		
+
 		_diagramView.LambdaExpression = _currentExpression;
 		_betaReductionView.ErrorMessage = "";
-		
+
 		await _betaReductionView.SetLambdaExpression(_currentExpression);
 		StateHasChanged();
 	}
@@ -79,7 +85,7 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 	private async Task downloadDiagramBitmap()
 	{
 		using SKBitmap bmp = _diagramView.Geometry.ToBitmap();
-		
+
 		SKData encoded = bmp.Encode(SKEncodedImageFormat.Png, 100);
 		await download(encoded.AsStream(), "diagram.png");
 	}
@@ -89,6 +95,7 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 		using SKBitmap bmp = _diagramView.Geometry.ToBitmap();
 
 		double factor;
+
 		if (bmp.Width > bmp.Height)
 		{
 			factor = 1920d / bmp.Width;
@@ -97,8 +104,9 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 		{
 			factor = 1080d / bmp.Height;
 		}
-		
-		using SKBitmap bmpResized = bmp.Resize(new SKSizeI((int)(bmp.Width*factor), (int)(bmp.Height*factor)), SKSamplingOptions.Default);
+
+		using SKBitmap bmpResized = bmp.Resize(new SKSizeI((int)(bmp.Width * factor), (int)(bmp.Height * factor)),
+											   SKSamplingOptions.Default);
 		SKData encoded = bmpResized.Encode(SKEncodedImageFormat.Png, 100);
 		await download(encoded.AsStream(), "diagram_hd.png");
 	}
@@ -111,17 +119,11 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 
 	private static MemoryStream generateStreamFromString(string s)
 	{
-		MemoryStream stream = new MemoryStream();
-		StreamWriter writer = new StreamWriter(stream);
+		MemoryStream stream = new();
+		StreamWriter writer = new(stream);
 		writer.Write(s);
 		writer.Flush();
 		stream.Position = 0;
 		return stream;
-	}
-
-	public void Dispose()
-	{
-		_textEditor.TextChanged -= onTextChanged;
-		_textEditor.OnStartIdlingAsync -= onStartIdling;
 	}
 }

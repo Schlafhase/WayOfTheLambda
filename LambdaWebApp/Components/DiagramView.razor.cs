@@ -1,7 +1,6 @@
 ﻿using LambdaCalculus;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
 using SkiaSharp;
 using SkiaSharp.Views.Blazor;
 using TrompDiagrams;
@@ -11,6 +10,24 @@ namespace LambdaWebApp.Components;
 
 public partial class DiagramView : ComponentBase
 {
+	private SKCanvasView _canvas;
+	private Guid _id = Guid.NewGuid();
+
+	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
+	private SKColor _lineColor = SKColor.FromHsl(52, 68, 54);
+
+	private bool _panning = false;
+	private int _panStartCameraX = 0;
+	private int _panStartCameraY = 0;
+	private int _panStartX = 0;
+	private int _panStartY = 0;
+
+
+	public DiagramView()
+	{
+		LambdaExpression = LambdaExpression.Parse("λx.x");
+	}
+
 	public LambdaExpression LambdaExpression
 	{
 		get => _lambdaExpression;
@@ -30,16 +47,10 @@ public partial class DiagramView : ComponentBase
 		}
 	}
 
-	private SKCanvasView _canvas;
-	private Guid _id = Guid.NewGuid();
-
 	[Parameter] public int? Width { get; set; } = null;
 	[Parameter] public int? Height { get; set; } = null;
 
 	public Geometry Geometry { get; private set; }
-	private SKColor _lineColor = SKColor.FromHsl(52, 68, 54);
-
-	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
 
 	[Parameter] public double Zoom { get; set; } = 10;
 	[Parameter] public int CameraX { get; set; } = 10;
@@ -49,18 +60,6 @@ public partial class DiagramView : ComponentBase
 	private int _localCameraY => (int)(CameraY / Zoom);
 
 	private int getInLocalCoordinates(int x) => (int)(x / Zoom - _localCameraX);
-
-	private bool _panning = false;
-	private int _panStartX = 0;
-	private int _panStartY = 0;
-	private int _panStartCameraX = 0;
-	private int _panStartCameraY = 0;
-
-
-	public DiagramView()
-	{
-		LambdaExpression = LambdaExpression.Parse("λx.x");
-	}
 
 	// protected override async Task OnAfterRenderAsync(bool firstRender)
 	// {
@@ -119,7 +118,7 @@ public partial class DiagramView : ComponentBase
 			e.Surface.Canvas.DrawLine(startX, startY, endX, endY, new SKPaint
 			{
 				StrokeWidth = 2,
-				Color = _lineColor,
+				Color = _lineColor
 				// Antialiasing caused unexpected artefacts such as gaps between the lines and it lagged
 				// IsAntialias = true
 			});

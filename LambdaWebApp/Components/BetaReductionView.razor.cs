@@ -5,6 +5,24 @@ namespace LambdaWebApp.Components;
 
 public partial class BetaReductionView : ComponentBase
 {
+	private bool _betaNormal;
+	private string _errorMessage = "";
+
+	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
+
+	private List<LambdaExpression?> _steps = [];
+
+	public string ErrorMessage
+	{
+		get => _errorMessage;
+		set
+		{
+			_errorMessage = value;
+			StateHasChanged();
+		}
+	}
+
+	public int MaxSteps { get; set; } = 100;
 	// public LambdaExpression? LambdaExpression
 	// {
 	// 	get => _lambdaExpression;
@@ -32,25 +50,7 @@ public partial class BetaReductionView : ComponentBase
 		await loadSteps(_lambdaExpression);
 	}
 
-	public string ErrorMessage
-	{
-		get => _errorMessage;
-		set
-		{
-			_errorMessage = value;
-			StateHasChanged();
-		}
-	}
-
 	public event Action? OnChange;
-
-	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
-
-	public int MaxSteps { get; set; } = 100;
-
-	private List<LambdaExpression?> _steps = [];
-	private bool _betaNormal;
-	private string _errorMessage = "";
 
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)

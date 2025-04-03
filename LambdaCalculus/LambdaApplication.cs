@@ -1,11 +1,9 @@
-﻿using System.Reflection;
-
-namespace LambdaCalculus;
+﻿namespace LambdaCalculus;
 
 public class LambdaApplication : LambdaExpression
 {
-	private LambdaExpression? _function;
 	private LambdaExpression? _argument;
+	private LambdaExpression? _function;
 
 	public LambdaExpression? Function
 	{
@@ -63,23 +61,19 @@ public class LambdaApplication : LambdaExpression
 	// }
 
 
-	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression)
-	{
-		return new LambdaApplication
+	public override LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression) =>
+		new LambdaApplication
 		{
 			Function = Function.Substitute(variable, expression),
 			Argument = Argument.Substitute(variable, expression)
 		};
-	}
 
-	public override LambdaExpression AlphaConvert(LambdaExpression root)
-	{
-		return new LambdaApplication
+	public override LambdaExpression AlphaConvert(LambdaExpression root) =>
+		new LambdaApplication
 		{
 			Function = Function.AlphaConvert(root),
 			Argument = Argument.AlphaConvert(root)
 		};
-	}
 
 	public override string ToBruijnIndex()
 	{
@@ -107,8 +101,5 @@ public class LambdaApplication : LambdaExpression
 		return lambdaDefinition.Body.Substitute(lambdaDefinition.CapturedVariable, argument);
 	}
 
-	public override bool VariableIsFree(string name)
-	{
-		return Function.VariableIsFree(name) && Argument.VariableIsFree(name);
-	}
+	public override bool VariableIsFree(string name) => Function.VariableIsFree(name) && Argument.VariableIsFree(name);
 }

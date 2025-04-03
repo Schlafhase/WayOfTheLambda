@@ -4,36 +4,10 @@ namespace LambdaCalculus;
 
 public abstract partial class LambdaExpression
 {
+	private static readonly Regex _numberedVariableRegex = numberedVariableRegexGenerator();
+
+	private static readonly Regex _variableRegex = variableRegexGenerator();
 	public LambdaExpression? Parent;
-
-	public abstract LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression);
-
-	/// <summary>
-	/// Changes all variable names in an expression to unique names.
-	/// </summary>
-	/// <returns></returns>
-	public abstract LambdaExpression AlphaConvert(LambdaExpression root);
-
-	public abstract string ToBruijnIndex();
-
-	/// <summary>
-	/// Substitutes all instances of a variable in an abstraction with the argument of the application.
-	/// </summary>
-	/// <param name="checkForBetaNormalForm"></param>
-	/// <returns>A <see cref="LambdaExpression"/> if possible.</returns>
-	public abstract LambdaExpression? BetaReduce(bool checkForBetaNormalForm = true);
-
-	public bool IsBetaNormalForm()
-	{
-		return this switch
-		{
-			LambdaApplication application => application.Function is not LambdaAbstraction &&
-				application.Function.IsBetaNormalForm() && application.Argument.IsBetaNormalForm(),
-
-			LambdaAbstraction abstraction => abstraction.Body.IsBetaNormalForm(),
-			_                             => true
-		};
-	}
 
 	public LambdaExpression Root
 	{
@@ -48,6 +22,35 @@ public abstract partial class LambdaExpression
 
 			return current;
 		}
+	}
+
+	public abstract LambdaExpression Substitute(LambdaVariable variable, LambdaExpression expression);
+
+	/// <summary>
+	///     Changes all variable names in an expression to unique names.
+	/// </summary>
+	/// <returns></returns>
+	public abstract LambdaExpression AlphaConvert(LambdaExpression root);
+
+	public abstract string ToBruijnIndex();
+
+	/// <summary>
+	///     Substitutes all instances of a variable in an abstraction with the argument of the application.
+	/// </summary>
+	/// <param name="checkForBetaNormalForm"></param>
+	/// <returns>A <see cref="LambdaExpression" /> if possible.</returns>
+	public abstract LambdaExpression? BetaReduce(bool checkForBetaNormalForm = true);
+
+	public bool IsBetaNormalForm()
+	{
+		return this switch
+		{
+			LambdaApplication application => application.Function is not LambdaAbstraction &&
+				application.Function.IsBetaNormalForm() && application.Argument.IsBetaNormalForm(),
+
+			LambdaAbstraction abstraction => abstraction.Body.IsBetaNormalForm(),
+			_                             => true
+		};
 	}
 
 	public string GetFreeVariableName(string name, LambdaExpression root)
@@ -89,14 +92,9 @@ public abstract partial class LambdaExpression
 	[GeneratedRegex(@"_(\d+)$", RegexOptions.Compiled)]
 	private static partial Regex numberedVariableRegexGenerator();
 
-	private static readonly Regex _numberedVariableRegex = numberedVariableRegexGenerator();
-
 	public abstract bool VariableIsFree(string name);
 
-	public bool AlphaEquivalent(LambdaExpression other)
-	{
-		return ToBruijnIndex() == other.ToBruijnIndex();
-	}
+	public bool AlphaEquivalent(LambdaExpression other) => ToBruijnIndex() == other.ToBruijnIndex();
 
 	public LambdaExpression Clone()
 	{
@@ -189,7 +187,7 @@ public abstract partial class LambdaExpression
 					Function = new LambdaApplication
 					{
 						Function = new LambdaVariable { Name = "p" },
-						Argument = new LambdaVariable { Name = "q" },
+						Argument = new LambdaVariable { Name = "q" }
 					},
 					Argument = FALSE()
 				}
@@ -396,7 +394,7 @@ public abstract partial class LambdaExpression
 
 			argumentFound:
 			string argument = input[argumentStartIndex..argumentEndIndex];
-			string function = input[0..(argumentStartIndex - (argumentInParentheses ? 1 : 0))];
+			string function = input[..(argumentStartIndex - (argumentInParentheses ? 1 : 0))];
 
 			return new LambdaApplication
 				{ Function = Parse(function, index), Argument = Parse(argument, index + argumentStartIndex) };
@@ -407,6 +405,4 @@ public abstract partial class LambdaExpression
 
 	[GeneratedRegex(@"^[a-zA-Z0-9_-]+$", RegexOptions.Compiled)]
 	private static partial Regex variableRegexGenerator();
-
-	private static readonly Regex _variableRegex = variableRegexGenerator();
 }

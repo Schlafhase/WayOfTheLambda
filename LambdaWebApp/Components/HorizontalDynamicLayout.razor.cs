@@ -1,17 +1,15 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace LambdaWebApp.Components;
 
 public partial class HorizontalDynamicLayout : ComponentBase
 {
+	private Guid _id = Guid.NewGuid();
 	[Parameter] public RenderFragment? ChildContent { get; set; }
 	[Parameter] public float firstChildWidth { get; set; } = 50;
 
 	[Inject] private IJSRuntime _jsRuntime { get; set; } = null!;
-
-	private Guid _id = Guid.NewGuid();
 
 	protected override async Task OnAfterRenderAsync(bool firstRender)
 	{
