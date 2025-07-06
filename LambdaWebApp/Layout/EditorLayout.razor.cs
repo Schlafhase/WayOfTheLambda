@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Newtonsoft.Json;
 using SkiaSharp;
+using TrompDiagrams;
+using TrompDiagrams.Rendering;
 
 namespace LambdaWebApp.Layout;
 
@@ -80,6 +82,24 @@ public partial class EditorLayout : LayoutComponentBase, IDisposable
 	{
 		string json = JsonConvert.SerializeObject(_diagramView.Geometry, Formatting.Indented);
 		await download(generateStreamFromString(json), "diagram.json");
+	}
+
+	private async Task downloadAllStepsJson()
+	{
+		List<Geometry> geos = [];
+		foreach (LambdaExpression? step in _betaReductionView.Steps)
+		{
+			if (step is null)
+			{
+				continue;
+			}
+
+			Geometry geo = LambdaExpressionRenderer.Render(step);
+			geos.Add(geo);
+		}
+		
+		string json = JsonConvert.SerializeObject(geos, Formatting.Indented);
+		await download(generateStreamFromString(json), "steps.json");
 	}
 
 	private async Task downloadDiagramBitmap()

@@ -8,15 +8,15 @@
     {
         <div>
             <h3>Beta normal form</h3>
-            <ExpressionWithDiagram LambdaExpression="@_steps[^1]"/>
+            <ExpressionWithDiagram LambdaExpression="@Steps[^1]"/>
         </div>
     }
 
-    @for (int i = 0; i < _steps.Count; i++)
+    @for (int i = 0; i < Steps.Count; i++)
     {
         <div>
             <h5>Step @(i + 1)</h5>
-            <ExpressionWithDiagram LambdaExpression="@_steps[i]"/>
+            <ExpressionWithDiagram LambdaExpression="@Steps[i]"/>
         </div>
     }
 

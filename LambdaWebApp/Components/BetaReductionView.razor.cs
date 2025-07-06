@@ -10,7 +10,7 @@ public partial class BetaReductionView : ComponentBase
 
 	private LambdaExpression _lambdaExpression = LambdaExpression.Parse("λx.x");
 
-	private List<LambdaExpression?> _steps = [];
+	public List<LambdaExpression?> Steps { get; private set; } = [];
 
 	public string ErrorMessage
 	{
@@ -64,11 +64,11 @@ public partial class BetaReductionView : ComponentBase
 	private async Task loadSteps(LambdaExpression lambdaExpression)
 	{
 		LambdaExpression? next = lambdaExpression.Clone();
-		_steps = [];
+		Steps = [];
 
-		while (next is not null && _steps.Count < MaxSteps)
+		while (next is not null && Steps.Count < MaxSteps)
 		{
-			_steps.Add(next.Clone());
+			Steps.Add(next.Clone());
 			next = next.BetaReduce();
 
 			// if (_steps.Count % 10 != 0)
